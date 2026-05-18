@@ -1,0 +1,4456 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Stride</title>
+  <meta name="description" content="Stride is a calm productivity workspace for tasks, focus, useful links, and reset moments.">
+  <script>
+    document.documentElement.classList.add("js");
+  </script>
+  <style>
+    :root {
+      --bg: #0f1117;
+      --bg-elevated: rgba(20, 24, 35, 0.78);
+      --bg-strong: rgba(14, 18, 28, 0.92);
+      --line: rgba(148, 163, 184, 0.16);
+      --line-strong: rgba(96, 165, 250, 0.22);
+      --text: #f4f8ff;
+      --muted: #9aa7bd;
+      --muted-strong: #c9d5ea;
+      --blue: #62a8ff;
+      --cyan: #5fe0ff;
+      --violet: #8c7dff;
+      --success: #8df0b8;
+      --shadow: 0 18px 60px rgba(5, 10, 20, 0.42);
+      --glow: 0 0 0 1px rgba(92, 130, 255, 0.1), 0 0 34px rgba(87, 193, 255, 0.12);
+      --radius: 8px;
+      --container: 1120px;
+      --header-height: 88px;
+    }
+
+    body[data-theme="glacier"] {
+      --blue: #75c9ff;
+      --cyan: #a7fff0;
+      --violet: #57dfd2;
+    }
+
+    body[data-theme="pulse"] {
+      --blue: #7d9fff;
+      --cyan: #d3a0ff;
+      --violet: #ff8fc5;
+    }
+
+    body[data-theme="mint"] {
+      --blue: #6fc9ff;
+      --cyan: #82ffd7;
+      --violet: #91c2ff;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      color: var(--text);
+      font-family: "Inter", "Segoe UI Variable", "Segoe UI", system-ui, sans-serif;
+      background:
+        radial-gradient(circle at 15% 18%, rgba(93, 139, 255, 0.18), transparent 28%),
+        radial-gradient(circle at 82% 16%, rgba(95, 224, 255, 0.12), transparent 24%),
+        radial-gradient(circle at 50% 110%, rgba(140, 125, 255, 0.14), transparent 32%),
+        linear-gradient(180deg, #0b0d13 0%, #0f1117 42%, #0d1018 100%);
+      overflow-x: hidden;
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      background:
+        linear-gradient(rgba(255, 255, 255, 0.015) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 255, 255, 0.015) 1px, transparent 1px);
+      background-size: 42px 42px;
+      mask-image: radial-gradient(circle at center, black 58%, transparent 100%);
+      opacity: 0.4;
+    }
+
+    body.modal-open,
+    body.sidebar-open {
+      overflow: hidden;
+    }
+
+    a {
+      color: inherit;
+      text-decoration: none;
+    }
+
+    button,
+    input,
+    textarea {
+      font: inherit;
+      color: inherit;
+    }
+
+    button {
+      border: 0;
+      cursor: pointer;
+      background: none;
+    }
+
+    img,
+    svg {
+      display: block;
+    }
+
+    section[id] {
+      scroll-margin-top: 108px;
+    }
+
+    .sr-only {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border: 0;
+    }
+
+    .container {
+      width: min(calc(100% - 32px), var(--container));
+      margin: 0 auto;
+    }
+
+    .app-shell {
+      position: relative;
+      z-index: 1;
+      padding: calc(var(--header-height) + 26px) 0 48px;
+      transition: opacity 0.8s ease, transform 0.8s ease;
+    }
+
+    .site-header {
+      position: fixed;
+      inset: 0 0 auto 0;
+      z-index: 20;
+      background: rgba(9, 12, 19, 0);
+      backdrop-filter: blur(0);
+      transition: background 0.6s ease, backdrop-filter 0.6s ease, border-color 0.6s ease;
+      border-bottom: 1px solid transparent;
+    }
+
+    .header-row {
+      min-height: var(--header-height);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 24px;
+    }
+
+    .header-actions,
+    .header-tools {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .header-actions {
+      min-width: 0;
+      justify-content: flex-end;
+      flex-wrap: wrap;
+    }
+
+    .brand {
+      display: inline-flex;
+      align-items: center;
+      gap: 14px;
+      min-width: 0;
+    }
+
+    .brand-wordmark {
+      display: inline-flex;
+      align-items: baseline;
+      gap: 7px;
+      font-size: 1.08rem;
+      letter-spacing: 0;
+      white-space: nowrap;
+    }
+
+    .brand-wordmark span {
+      font-weight: 600;
+      color: var(--text);
+    }
+
+    .brand-wordmark em {
+      font-style: italic;
+      font-weight: 500;
+      color: #d7e4ff;
+      opacity: 0.96;
+    }
+
+    .stride-logo {
+      width: 44px;
+      height: 44px;
+      flex: 0 0 auto;
+    }
+
+    .top-nav {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      padding: 6px;
+      border: 1px solid rgba(120, 141, 176, 0.1);
+      background: rgba(14, 18, 28, 0.5);
+      backdrop-filter: blur(12px);
+      border-radius: var(--radius);
+      box-shadow: var(--glow);
+      transition: opacity 0.6s ease, transform 0.6s ease;
+    }
+
+    .top-nav a {
+      padding: 10px 14px;
+      border-radius: 6px;
+      font-size: 0.92rem;
+      color: var(--muted-strong);
+      transition: color 0.25s ease, background 0.25s ease, transform 0.25s ease;
+    }
+
+    .top-nav a.is-active,
+    .top-nav a:hover,
+    .top-nav a:focus-visible {
+      color: var(--text);
+      background: rgba(255, 255, 255, 0.05);
+      transform: translateY(-1px);
+      outline: none;
+    }
+
+    .icon-button {
+      width: 44px;
+      height: 44px;
+      border-radius: 6px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--muted-strong);
+      border: 1px solid rgba(147, 163, 184, 0.16);
+      background: rgba(255, 255, 255, 0.04);
+      transition: transform 0.25s ease, border-color 0.25s ease, color 0.25s ease, background 0.25s ease;
+    }
+
+    .icon-button:hover,
+    .icon-button:focus-visible {
+      transform: translateY(-2px);
+      border-color: rgba(98, 168, 255, 0.28);
+      color: var(--text);
+      background: rgba(255, 255, 255, 0.06);
+      outline: none;
+    }
+
+    .icon-button svg {
+      width: 18px;
+      height: 18px;
+      stroke: currentColor;
+      fill: none;
+      stroke-width: 2;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
+    button:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+      transform: none !important;
+    }
+
+    .help-button {
+      min-height: 44px;
+      padding-inline: 16px;
+    }
+
+    body.focus-mode #launch,
+    body.focus-mode #reset,
+    body.focus-mode #games,
+    body.focus-mode #editor,
+    body.focus-mode .top-nav a[data-section-link="launch"],
+    body.focus-mode .top-nav a[data-section-link="reset"],
+    body.focus-mode .top-nav a[data-section-link="editor"],
+    body.focus-mode .sidebar-link[data-section-link="launch"],
+    body.focus-mode .sidebar-link[data-section-link="reset"],
+    body.focus-mode .sidebar-link[data-section-link="editor"] {
+      display: none;
+    }
+
+    .dashboard-layout {
+      display: grid;
+      grid-template-columns: 276px minmax(0, 1fr);
+      gap: 20px;
+      align-items: start;
+    }
+
+    .content-column {
+      min-width: 0;
+      display: grid;
+      gap: 22px;
+    }
+
+    .sidebar {
+      position: sticky;
+      top: calc(var(--header-height) + 26px);
+      z-index: 5;
+    }
+
+    .sidebar-shell {
+      display: grid;
+      gap: 16px;
+    }
+
+    .sidebar-panel {
+      border: 1px solid var(--line);
+      background: linear-gradient(180deg, rgba(18, 23, 34, 0.9), rgba(11, 15, 24, 0.82));
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 18px;
+    }
+
+    .sidebar-heading {
+      margin: 10px 0 16px;
+      font-size: 1.04rem;
+      line-height: 1.4;
+      font-weight: 600;
+      color: var(--text);
+    }
+
+    .sidebar-nav {
+      display: grid;
+      gap: 10px;
+    }
+
+    .sidebar-link {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 14px;
+      border-radius: 6px;
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      background: rgba(255, 255, 255, 0.03);
+      color: var(--muted-strong);
+      transition: transform 0.2s ease, border-color 0.2s ease, background 0.2s ease, color 0.2s ease;
+    }
+
+    .sidebar-link:hover,
+    .sidebar-link:focus-visible,
+    .sidebar-link.is-active {
+      transform: translateX(2px);
+      border-color: rgba(98, 168, 255, 0.22);
+      background: rgba(98, 168, 255, 0.12);
+      color: var(--text);
+      outline: none;
+    }
+
+    .sidebar-icon {
+      width: 18px;
+      height: 18px;
+      stroke: currentColor;
+      fill: none;
+      stroke-width: 2;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      flex: 0 0 auto;
+    }
+
+    .link-label,
+    .sidebar-note,
+    .sidebar-action-label {
+      line-height: 1.5;
+    }
+
+    .mini-stat-grid {
+      display: grid;
+      gap: 12px;
+    }
+
+    .mini-stat {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 12px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    }
+
+    .mini-stat:last-child {
+      padding-bottom: 0;
+      border-bottom: 0;
+    }
+
+    .mini-stat-value {
+      font-size: 1.2rem;
+      font-weight: 650;
+      color: var(--text);
+    }
+
+    .mini-stat-copy {
+      color: var(--muted);
+      font-size: 0.92rem;
+    }
+
+    .sidebar-note {
+      margin: 10px 0 14px;
+      color: var(--muted);
+    }
+
+    .sidebar-help {
+      width: 100%;
+      justify-content: center;
+    }
+
+    .hero {
+      display: grid;
+      grid-template-columns: 1.2fr 0.9fr;
+      gap: 20px;
+      align-items: stretch;
+      margin-bottom: 22px;
+    }
+
+    .hero-copy,
+    .metric-card,
+    .panel {
+      position: relative;
+      overflow: hidden;
+      border: 1px solid var(--line);
+      background: linear-gradient(180deg, rgba(18, 23, 34, 0.9), rgba(11, 15, 24, 0.82));
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+    }
+
+    .hero-copy {
+      padding: 34px;
+      min-height: 100%;
+    }
+
+    .hero-copy::after,
+    .panel::after,
+    .metric-card::after {
+      content: "";
+      position: absolute;
+      inset: auto -25% -45% auto;
+      width: 220px;
+      aspect-ratio: 1;
+      background: radial-gradient(circle, rgba(98, 168, 255, 0.16), transparent 68%);
+      pointer-events: none;
+    }
+
+    .eyebrow {
+      margin: 0 0 12px;
+      font-size: 0.86rem;
+      letter-spacing: 0;
+      text-transform: uppercase;
+      color: #91b4ff;
+    }
+
+    .hero-copy h1 {
+      margin: 0;
+      font-size: clamp(2.3rem, 5vw, 4.15rem);
+      line-height: 1.02;
+      max-width: 12ch;
+      font-weight: 650;
+    }
+
+    .hero-copy p {
+      margin: 16px 0 0;
+      max-width: 56ch;
+      font-size: 1rem;
+      line-height: 1.65;
+      color: var(--muted);
+    }
+
+    .hero-meta {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      margin-top: 22px;
+      padding: 10px 14px;
+      color: var(--muted-strong);
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      width: fit-content;
+    }
+
+    .hero-grid {
+      display: grid;
+      grid-template-rows: 1fr 1fr;
+      gap: 20px;
+    }
+
+    .metric-card {
+      padding: 26px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: 14px;
+      min-height: 194px;
+      transition: transform 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .metric-card:hover,
+    .panel:hover {
+      transform: translateY(-3px);
+      border-color: var(--line-strong);
+      box-shadow: 0 24px 64px rgba(4, 10, 20, 0.5);
+    }
+
+    .metric-label,
+    .panel-label {
+      color: var(--muted);
+      font-size: 0.92rem;
+    }
+
+    .metric-value {
+      font-size: clamp(2.1rem, 4vw, 3.2rem);
+      font-weight: 650;
+      line-height: 1;
+    }
+
+    .metric-support {
+      color: var(--muted-strong);
+      line-height: 1.55;
+    }
+
+    .progress-track {
+      height: 10px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.06);
+      overflow: hidden;
+      border: 1px solid rgba(255, 255, 255, 0.04);
+    }
+
+    .progress-fill {
+      height: 100%;
+      width: 0;
+      border-radius: inherit;
+      background: linear-gradient(90deg, var(--cyan), var(--blue), var(--violet));
+      box-shadow: 0 0 22px rgba(95, 224, 255, 0.25);
+      transition: width 0.35s ease;
+    }
+
+    .workspace-grid {
+      display: grid;
+      grid-template-columns: 1.28fr 0.92fr;
+      gap: 20px;
+      align-items: start;
+    }
+
+    .stacked-panels {
+      display: grid;
+      gap: 20px;
+    }
+
+    .panel {
+      padding: 24px;
+      transition: transform 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .panel-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+
+    .panel-title {
+      margin: 0 0 8px;
+      font-size: 1.28rem;
+      font-weight: 600;
+    }
+
+    .panel-copy {
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.55;
+      max-width: 44ch;
+    }
+
+    .subtle-chip {
+      padding: 8px 12px;
+      border-radius: 999px;
+      color: #d9e6ff;
+      font-size: 0.83rem;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      white-space: nowrap;
+    }
+
+    .task-form {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 134px auto;
+      gap: 12px;
+      margin-bottom: 18px;
+    }
+
+    .select-input {
+      appearance: none;
+      background-image:
+        linear-gradient(45deg, transparent 50%, #95b7ff 50%),
+        linear-gradient(135deg, #95b7ff 50%, transparent 50%);
+      background-position:
+        calc(100% - 18px) calc(50% - 3px),
+        calc(100% - 12px) calc(50% - 3px);
+      background-size: 6px 6px, 6px 6px;
+      background-repeat: no-repeat;
+      padding-right: 34px;
+    }
+
+    .task-toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      flex-wrap: wrap;
+      margin-bottom: 14px;
+    }
+
+    .filter-chips {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .filter-chip {
+      min-height: 38px;
+      padding: 0 14px;
+      border-radius: 999px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      background: rgba(255, 255, 255, 0.03);
+      color: var(--muted-strong);
+      transition: transform 0.2s ease, border-color 0.2s ease, background 0.2s ease;
+    }
+
+    .filter-chip.is-active,
+    .filter-chip:hover,
+    .filter-chip:focus-visible {
+      transform: translateY(-1px);
+      border-color: rgba(98, 168, 255, 0.24);
+      background: rgba(98, 168, 255, 0.12);
+      color: var(--text);
+      outline: none;
+    }
+
+    .top-three {
+      display: grid;
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+
+    .top-three-item {
+      display: grid;
+      grid-template-columns: auto minmax(0, 1fr) auto;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 14px;
+      border-radius: 6px;
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      background: rgba(255, 255, 255, 0.03);
+    }
+
+    .top-three-rank {
+      width: 28px;
+      height: 28px;
+      border-radius: 999px;
+      display: grid;
+      place-items: center;
+      background: rgba(98, 168, 255, 0.12);
+      color: #dff3ff;
+      font-size: 0.9rem;
+      font-weight: 600;
+    }
+
+    .top-three-title {
+      font-weight: 600;
+      line-height: 1.45;
+      color: var(--text);
+    }
+
+    .top-three-meta {
+      color: var(--muted);
+      font-size: 0.88rem;
+      margin-top: 4px;
+    }
+
+    .task-input,
+    .reflection-input {
+      width: 100%;
+      border-radius: 6px;
+      border: 1px solid rgba(147, 163, 184, 0.16);
+      background: rgba(10, 14, 23, 0.72);
+      padding: 14px 16px;
+      color: var(--text);
+      outline: none;
+      transition: border-color 0.25s ease, box-shadow 0.25s ease, transform 0.25s ease;
+    }
+
+    .task-input::placeholder,
+    .reflection-input::placeholder {
+      color: #6f7e98;
+    }
+
+    .task-input:focus,
+    .reflection-input:focus {
+      border-color: rgba(98, 168, 255, 0.42);
+      box-shadow: 0 0 0 4px rgba(98, 168, 255, 0.12);
+      transform: translateY(-1px);
+    }
+
+    .button-primary,
+    .button-secondary {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      min-height: 48px;
+      padding: 0 18px;
+      border-radius: 6px;
+      transition: transform 0.25s ease, background 0.25s ease, border-color 0.25s ease, color 0.25s ease;
+      white-space: nowrap;
+    }
+
+    .button-primary {
+      background: linear-gradient(135deg, rgba(95, 224, 255, 0.22), rgba(98, 168, 255, 0.28), rgba(140, 125, 255, 0.22));
+      border: 1px solid rgba(124, 160, 255, 0.28);
+      color: var(--text);
+      box-shadow: var(--glow);
+    }
+
+    .button-secondary {
+      border: 1px solid rgba(147, 163, 184, 0.16);
+      background: rgba(255, 255, 255, 0.04);
+      color: var(--muted-strong);
+    }
+
+    .button-primary:hover,
+    .button-primary:focus-visible,
+    .button-secondary:hover,
+    .button-secondary:focus-visible {
+      transform: translateY(-2px);
+      outline: none;
+    }
+
+    .button-primary:hover,
+    .button-primary:focus-visible {
+      background: linear-gradient(135deg, rgba(95, 224, 255, 0.28), rgba(98, 168, 255, 0.34), rgba(140, 125, 255, 0.28));
+    }
+
+    .button-secondary:hover,
+    .button-secondary:focus-visible {
+      border-color: rgba(124, 160, 255, 0.3);
+      color: var(--text);
+      background: rgba(255, 255, 255, 0.06);
+    }
+
+    .button-icon {
+      width: 16px;
+      height: 16px;
+      stroke: currentColor;
+      fill: none;
+      stroke-width: 2;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      flex: 0 0 auto;
+    }
+
+    .task-meta {
+      margin: 0 0 14px;
+      color: var(--muted);
+      font-size: 0.94rem;
+    }
+
+    .task-list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      display: grid;
+      gap: 10px;
+    }
+
+    .task-item {
+      display: grid;
+      grid-template-columns: auto minmax(0, 1fr) auto auto;
+      align-items: center;
+      gap: 14px;
+      padding: 14px 14px 14px 12px;
+      border-radius: 6px;
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      transition: transform 0.25s ease, border-color 0.25s ease, background 0.25s ease;
+    }
+
+    .task-item:hover {
+      transform: translateX(2px);
+      border-color: rgba(98, 168, 255, 0.18);
+      background: rgba(255, 255, 255, 0.045);
+    }
+
+    .task-check {
+      appearance: none;
+      width: 22px;
+      height: 22px;
+      border-radius: 999px;
+      border: 1px solid rgba(147, 163, 184, 0.32);
+      background:
+        radial-gradient(circle at center, rgba(95, 224, 255, 0), rgba(95, 224, 255, 0));
+      position: relative;
+      transition: border-color 0.25s ease, background 0.25s ease, box-shadow 0.25s ease, transform 0.25s ease;
+    }
+
+    .task-check:checked {
+      border-color: rgba(95, 224, 255, 0.76);
+      background:
+        radial-gradient(circle at center, rgba(95, 224, 255, 0.3) 0%, rgba(95, 224, 255, 0.16) 50%, rgba(95, 224, 255, 0.02) 100%);
+      box-shadow: 0 0 0 4px rgba(95, 224, 255, 0.09);
+    }
+
+    .task-check::after {
+      content: "";
+      position: absolute;
+      inset: 5px 4px 4px 5px;
+      border-right: 2px solid #dffbff;
+      border-bottom: 2px solid #dffbff;
+      transform: rotate(40deg) scale(0);
+      transform-origin: center;
+      transition: transform 0.18s ease;
+    }
+
+    .task-check:checked::after {
+      transform: rotate(40deg) scale(1);
+    }
+
+    .task-text {
+      min-width: 0;
+      line-height: 1.5;
+      color: var(--text);
+      transition: color 0.25s ease, opacity 0.25s ease;
+      word-break: break-word;
+    }
+
+    .task-content {
+      min-width: 0;
+    }
+
+    .task-item-meta {
+      margin-top: 6px;
+      color: var(--muted);
+      font-size: 0.86rem;
+    }
+
+    .priority-pill {
+      min-width: 74px;
+      padding: 8px 10px;
+      border-radius: 999px;
+      text-align: center;
+      font-size: 0.82rem;
+      font-weight: 600;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .priority-pill[data-priority="high"] {
+      color: #ffe1f0;
+      background: rgba(255, 143, 197, 0.12);
+      border-color: rgba(255, 143, 197, 0.18);
+    }
+
+    .priority-pill[data-priority="medium"] {
+      color: #d8ecff;
+      background: rgba(98, 168, 255, 0.12);
+      border-color: rgba(98, 168, 255, 0.18);
+    }
+
+    .priority-pill[data-priority="low"] {
+      color: #dff9ea;
+      background: rgba(130, 255, 215, 0.12);
+      border-color: rgba(130, 255, 215, 0.18);
+    }
+
+    .task-item.is-complete .task-text {
+      color: #75849d;
+      text-decoration: line-through;
+      opacity: 0.82;
+    }
+
+    .delete-task {
+      width: 40px;
+      height: 40px;
+      border-radius: 6px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      color: #9fb0c9;
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      transition: background 0.2s ease, color 0.2s ease, transform 0.2s ease;
+    }
+
+    .delete-task:hover,
+    .delete-task:focus-visible {
+      color: #ffb7cf;
+      background: rgba(255, 120, 160, 0.08);
+      transform: translateY(-1px);
+      outline: none;
+    }
+
+    .empty-state {
+      margin: 18px 0 0;
+      padding: 18px;
+      border-radius: 6px;
+      color: var(--muted);
+      border: 1px dashed rgba(147, 163, 184, 0.2);
+      background: rgba(255, 255, 255, 0.02);
+    }
+
+    .empty-state[hidden] {
+      display: none;
+    }
+
+    .timer-panel {
+      overflow: visible;
+    }
+
+    .mode-pills {
+      display: inline-flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-bottom: 18px;
+    }
+
+    .mode-pill {
+      padding: 8px 12px;
+      border-radius: 999px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      color: var(--muted);
+      background: rgba(255, 255, 255, 0.03);
+      transition: background 0.25s ease, color 0.25s ease, border-color 0.25s ease;
+    }
+
+    .mode-pill.is-active {
+      color: var(--text);
+      background: rgba(98, 168, 255, 0.14);
+      border-color: rgba(95, 224, 255, 0.24);
+      box-shadow: var(--glow);
+    }
+
+    .timer-face {
+      position: relative;
+      display: grid;
+      gap: 6px;
+      padding: 22px;
+      margin-bottom: 18px;
+      border-radius: 6px;
+      background:
+        radial-gradient(circle at 50% 20%, rgba(95, 224, 255, 0.1), transparent 55%),
+        rgba(8, 12, 21, 0.72);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+    }
+
+    .timer-label {
+      color: #9ecbff;
+      font-size: 0.92rem;
+      text-transform: uppercase;
+    }
+
+    .timer-display {
+      font-size: clamp(2.8rem, 9vw, 5.1rem);
+      line-height: 1;
+      font-weight: 650;
+      letter-spacing: 0;
+    }
+
+    .timer-status {
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.6;
+      min-height: 3em;
+    }
+
+    .timer-actions {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .panel-flash {
+      animation: panelFlash 0.8s ease;
+    }
+
+    @keyframes panelFlash {
+      0% {
+        box-shadow: 0 0 0 rgba(95, 224, 255, 0);
+      }
+      40% {
+        box-shadow: 0 0 0 1px rgba(95, 224, 255, 0.22), 0 0 38px rgba(95, 224, 255, 0.15);
+      }
+      100% {
+        box-shadow: var(--shadow);
+      }
+    }
+
+    .reflection-input {
+      min-height: 154px;
+      resize: vertical;
+      line-height: 1.6;
+      margin-bottom: 14px;
+    }
+
+    .panel-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      flex-wrap: wrap;
+    }
+
+    .save-status {
+      margin: 0;
+      color: var(--muted);
+      font-size: 0.92rem;
+      min-height: 1.4em;
+    }
+
+    .file-editor-panel .panel-copy {
+      max-width: 58ch;
+    }
+
+    .window-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      padding: 12px 14px;
+      margin-bottom: 16px;
+      border-radius: 6px;
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      background: rgba(8, 12, 21, 0.72);
+    }
+
+    .window-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      min-width: 0;
+    }
+
+    .window-dots {
+      display: flex;
+      gap: 6px;
+      flex: 0 0 auto;
+    }
+
+    .window-dot {
+      width: 9px;
+      height: 9px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.16);
+    }
+
+    .window-dot:nth-child(1) {
+      background: rgba(95, 224, 255, 0.75);
+    }
+
+    .window-dot:nth-child(2) {
+      background: rgba(98, 168, 255, 0.75);
+    }
+
+    .window-dot:nth-child(3) {
+      background: rgba(140, 125, 255, 0.75);
+    }
+
+    .window-tab {
+      min-width: 0;
+      padding: 8px 12px;
+      border-radius: 6px;
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      background: rgba(255, 255, 255, 0.04);
+      color: #d9e6ff;
+      font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+      font-size: 0.9rem;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .window-meta {
+      color: var(--muted);
+      font-size: 0.85rem;
+      text-transform: uppercase;
+    }
+
+    .editor-topline {
+      display: grid;
+      grid-template-columns: minmax(0, 320px) auto;
+      gap: 14px;
+      align-items: end;
+      margin-bottom: 14px;
+    }
+
+    .file-name-wrap {
+      min-width: 0;
+    }
+
+    .file-name-label {
+      display: block;
+      margin: 0 0 8px;
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
+
+    .editor-hint {
+      color: var(--muted);
+      line-height: 1.55;
+      font-size: 0.94rem;
+    }
+
+    .editor-area {
+      width: 100%;
+      min-height: 280px;
+      padding: 18px;
+      border-radius: 6px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      background:
+        linear-gradient(180deg, rgba(14, 18, 28, 0.96), rgba(8, 12, 20, 0.92));
+      color: #deecff;
+      resize: vertical;
+      font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+      font-size: 0.94rem;
+      line-height: 1.72;
+      outline: none;
+      transition: border-color 0.25s ease, box-shadow 0.25s ease;
+    }
+
+    .editor-area:focus {
+      border-color: rgba(98, 168, 255, 0.34);
+      box-shadow: 0 0 0 4px rgba(98, 168, 255, 0.12);
+    }
+
+    .editor-actions {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .launch-grid,
+    .utility-grid {
+      display: grid;
+      gap: 14px;
+    }
+
+    .launch-grid {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    .launch-card,
+    .utility-card,
+    .zen-board {
+      border-radius: 6px;
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      background: rgba(255, 255, 255, 0.03);
+    }
+
+    .launch-card {
+      display: grid;
+      gap: 12px;
+      min-height: 152px;
+      padding: 18px;
+      transition: transform 0.25s ease, border-color 0.25s ease, background 0.25s ease;
+    }
+
+    .launch-card:hover,
+    .launch-card:focus-visible {
+      transform: translateY(-3px);
+      border-color: rgba(98, 168, 255, 0.22);
+      background: rgba(98, 168, 255, 0.08);
+      outline: none;
+    }
+
+    .launch-topline {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .launch-icon {
+      width: 42px;
+      height: 42px;
+      border-radius: 6px;
+      display: grid;
+      place-items: center;
+      background: linear-gradient(135deg, rgba(95, 224, 255, 0.16), rgba(98, 168, 255, 0.16), rgba(140, 125, 255, 0.16));
+      color: #e0f5ff;
+      box-shadow: var(--glow);
+      flex: 0 0 auto;
+    }
+
+    .launch-icon svg,
+    .launch-arrow {
+      width: 18px;
+      height: 18px;
+      stroke: currentColor;
+      fill: none;
+      stroke-width: 2;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
+    .launch-card h3,
+    .utility-card h3 {
+      margin: 0;
+      font-size: 1.02rem;
+    }
+
+    .launch-card p,
+    .utility-card p {
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.6;
+    }
+
+    .utility-grid {
+      grid-template-columns: 1.1fr 0.9fr;
+      align-items: start;
+    }
+
+    .utility-stack {
+      display: grid;
+      gap: 14px;
+    }
+
+    .utility-card {
+      padding: 18px;
+    }
+
+    .breath-shell {
+      display: grid;
+      gap: 16px;
+      justify-items: center;
+      text-align: center;
+    }
+
+    .breath-ring {
+      width: min(100%, 220px);
+      aspect-ratio: 1;
+      border-radius: 999px;
+      display: grid;
+      place-items: center;
+      background:
+        radial-gradient(circle at center, rgba(95, 224, 255, 0.08), transparent 55%),
+        rgba(10, 14, 23, 0.78);
+      border: 1px solid rgba(95, 224, 255, 0.16);
+      box-shadow: inset 0 0 0 1px rgba(95, 224, 255, 0.04), 0 0 40px rgba(95, 224, 255, 0.08);
+    }
+
+    .breath-orb {
+      width: 60%;
+      aspect-ratio: 1;
+      border-radius: 999px;
+      background: linear-gradient(180deg, rgba(95, 224, 255, 0.88), rgba(98, 168, 255, 0.76), rgba(140, 125, 255, 0.78));
+      box-shadow: 0 0 42px rgba(95, 224, 255, 0.22);
+      transform: scale(0.82);
+      transition: transform 1.2s ease, box-shadow 1.2s ease, filter 1.2s ease;
+      filter: saturate(1);
+    }
+
+    .breath-orb[data-phase="inhale"] {
+      transform: scale(1.08);
+      box-shadow: 0 0 55px rgba(95, 224, 255, 0.32);
+    }
+
+    .breath-orb[data-phase="hold"] {
+      transform: scale(1.08);
+      filter: saturate(1.08);
+    }
+
+    .breath-orb[data-phase="exhale"] {
+      transform: scale(0.8);
+      box-shadow: 0 0 28px rgba(140, 125, 255, 0.18);
+    }
+
+    .theme-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      flex-wrap: wrap;
+      margin-top: 18px;
+      padding-top: 18px;
+      border-top: 1px solid rgba(255, 255, 255, 0.06);
+    }
+
+    .theme-buttons {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .theme-button {
+      min-height: 42px;
+      padding: 0 14px;
+      border-radius: 999px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      background: rgba(255, 255, 255, 0.03);
+      color: var(--muted-strong);
+      transition: transform 0.2s ease, border-color 0.2s ease, background 0.2s ease;
+    }
+
+    .theme-button.is-active,
+    .theme-button:hover,
+    .theme-button:focus-visible {
+      transform: translateY(-1px);
+      border-color: rgba(98, 168, 255, 0.24);
+      background: rgba(98, 168, 255, 0.12);
+      color: var(--text);
+      outline: none;
+    }
+
+    .theme-status,
+    .fun-output,
+    .zen-status {
+      color: var(--muted);
+      line-height: 1.6;
+      min-height: 1.6em;
+    }
+
+    .fun-output strong {
+      color: var(--text);
+      font-weight: 600;
+    }
+
+    .choice-row {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 12px;
+      margin-top: 14px;
+    }
+
+    .zen-meta {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+
+    .zen-stat {
+      padding: 12px 14px;
+      border-radius: 6px;
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      background: rgba(255, 255, 255, 0.03);
+    }
+
+    .zen-stat-label {
+      display: block;
+      color: var(--muted);
+      font-size: 0.82rem;
+      margin-bottom: 6px;
+    }
+
+    .zen-stat-value {
+      font-size: 1.28rem;
+      font-weight: 650;
+    }
+
+    .zen-board {
+      position: relative;
+      min-height: 230px;
+      overflow: hidden;
+      margin-bottom: 14px;
+      background:
+        radial-gradient(circle at 20% 20%, rgba(95, 224, 255, 0.08), transparent 28%),
+        radial-gradient(circle at 80% 72%, rgba(140, 125, 255, 0.1), transparent 30%),
+        rgba(8, 12, 21, 0.82);
+    }
+
+    .zen-message {
+      position: absolute;
+      inset: 18px;
+      display: grid;
+      place-items: center;
+      text-align: center;
+      color: var(--muted);
+      line-height: 1.6;
+      pointer-events: none;
+    }
+
+    .zen-target {
+      position: absolute;
+      width: 54px;
+      height: 54px;
+      border-radius: 999px;
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      background: radial-gradient(circle at 35% 35%, rgba(255, 255, 255, 0.95), rgba(95, 224, 255, 0.65), rgba(98, 168, 255, 0.18));
+      box-shadow: 0 0 35px rgba(95, 224, 255, 0.22);
+      transition: transform 0.14s ease;
+    }
+
+    .zen-target:hover,
+    .zen-target:focus-visible {
+      transform: scale(1.06);
+      outline: none;
+    }
+
+    .zen-target[hidden] {
+      display: none;
+    }
+
+    .game-switcher {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-bottom: 18px;
+    }
+
+    .game-tab {
+      min-height: 42px;
+      padding: 0 14px;
+      border-radius: 999px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      background: rgba(255, 255, 255, 0.03);
+      color: var(--muted-strong);
+      transition: transform 0.2s ease, border-color 0.2s ease, background 0.2s ease;
+    }
+
+    .game-tab.is-active,
+    .game-tab:hover,
+    .game-tab:focus-visible {
+      transform: translateY(-1px);
+      border-color: rgba(98, 168, 255, 0.24);
+      background: rgba(98, 168, 255, 0.12);
+      color: var(--text);
+      outline: none;
+    }
+
+    .game-pane[hidden] {
+      display: none;
+    }
+
+    .game-pane {
+      display: grid;
+      gap: 16px;
+    }
+
+    .game-caption {
+      color: var(--muted);
+      line-height: 1.6;
+    }
+
+    .memory-grid,
+    .glow-grid,
+    .luck-grid,
+    .sweep-grid {
+      display: grid;
+      gap: 12px;
+    }
+
+    .memory-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .memory-pad,
+    .glow-choice,
+    .luck-card,
+    .sweep-cell {
+      min-height: 88px;
+      border-radius: 6px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      background: rgba(255, 255, 255, 0.03);
+      color: var(--text);
+      transition: transform 0.18s ease, border-color 0.18s ease, background 0.18s ease, box-shadow 0.18s ease;
+    }
+
+    .memory-pad:hover,
+    .memory-pad:focus-visible,
+    .glow-choice:hover,
+    .glow-choice:focus-visible,
+    .luck-card:hover,
+    .luck-card:focus-visible,
+    .sweep-cell:hover,
+    .sweep-cell:focus-visible {
+      transform: translateY(-1px);
+      border-color: rgba(98, 168, 255, 0.24);
+      outline: none;
+    }
+
+    .memory-pad {
+      display: grid;
+      place-items: center;
+      font-weight: 600;
+      color: #e6f5ff;
+    }
+
+    .memory-pad[data-memory-pad="0"] {
+      background: linear-gradient(180deg, rgba(95, 224, 255, 0.16), rgba(95, 224, 255, 0.05));
+    }
+
+    .memory-pad[data-memory-pad="1"] {
+      background: linear-gradient(180deg, rgba(98, 168, 255, 0.16), rgba(98, 168, 255, 0.05));
+    }
+
+    .memory-pad[data-memory-pad="2"] {
+      background: linear-gradient(180deg, rgba(140, 125, 255, 0.16), rgba(140, 125, 255, 0.05));
+    }
+
+    .memory-pad[data-memory-pad="3"] {
+      background: linear-gradient(180deg, rgba(255, 143, 197, 0.16), rgba(255, 143, 197, 0.05));
+    }
+
+    .memory-pad.is-lit {
+      box-shadow: 0 0 36px rgba(95, 224, 255, 0.22);
+      transform: scale(1.02);
+      filter: saturate(1.2);
+    }
+
+    .glow-target {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 16px;
+      border-radius: 6px;
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      background: rgba(255, 255, 255, 0.03);
+    }
+
+    .glow-swatch {
+      width: 52px;
+      height: 52px;
+      border-radius: 999px;
+      box-shadow: 0 0 24px rgba(98, 168, 255, 0.18);
+      flex: 0 0 auto;
+    }
+
+    .glow-target-name {
+      font-size: 1.18rem;
+      font-weight: 600;
+      margin-top: 4px;
+    }
+
+    .glow-grid {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    .glow-choice {
+      min-height: 112px;
+      display: grid;
+      align-content: center;
+      justify-items: center;
+      gap: 8px;
+      padding: 10px;
+      font-weight: 600;
+    }
+
+    .glow-choice-swatch {
+      width: 38px;
+      height: 38px;
+      border-radius: 999px;
+      border: 1px solid rgba(255, 255, 255, 0.16);
+      box-shadow: 0 0 18px rgba(98, 168, 255, 0.16);
+    }
+
+    .luck-grid {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    .luck-card {
+      min-height: 100px;
+      display: grid;
+      place-items: center;
+      font-size: 1rem;
+      font-weight: 600;
+      color: #d9e6ff;
+    }
+
+    .luck-card.is-hit {
+      background: radial-gradient(circle at center, rgba(95, 224, 255, 0.28), rgba(98, 168, 255, 0.08));
+      box-shadow: 0 0 36px rgba(95, 224, 255, 0.22);
+    }
+
+    .luck-card.is-miss {
+      background: rgba(255, 255, 255, 0.04);
+      color: #96a6bf;
+    }
+
+    .sweep-grid {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    .sweep-cell {
+      aspect-ratio: 1;
+      min-height: 0;
+      position: relative;
+    }
+
+    .sweep-cell.is-lit {
+      background: radial-gradient(circle at center, rgba(95, 224, 255, 0.3), rgba(98, 168, 255, 0.08));
+      box-shadow: 0 0 30px rgba(95, 224, 255, 0.2);
+    }
+
+    .sweep-cell.is-lit::after {
+      content: "";
+      position: absolute;
+      inset: 30%;
+      border-radius: 999px;
+      background: rgba(220, 247, 255, 0.92);
+      box-shadow: 0 0 18px rgba(95, 224, 255, 0.24);
+    }
+
+    .sidebar-scrim,
+    .help-backdrop {
+      position: fixed;
+      inset: 0;
+      z-index: 32;
+      background: rgba(5, 8, 14, 0.6);
+      backdrop-filter: blur(12px);
+      transition: opacity 0.3s ease;
+    }
+
+    .sidebar-scrim[hidden],
+    .help-backdrop[hidden] {
+      display: none;
+    }
+
+    .help-backdrop {
+      z-index: 50;
+      display: grid;
+      place-items: center;
+      padding: 24px;
+    }
+
+    .help-modal {
+      width: min(920px, 100%);
+      border: 1px solid rgba(147, 163, 184, 0.16);
+      background: linear-gradient(180deg, rgba(18, 23, 34, 0.96), rgba(10, 13, 22, 0.94));
+      border-radius: var(--radius);
+      box-shadow: 0 32px 90px rgba(2, 8, 18, 0.58);
+      padding: 24px;
+    }
+
+    .help-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 14px;
+    }
+
+    .help-card {
+      padding: 18px;
+      border-radius: 6px;
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      background: rgba(255, 255, 255, 0.03);
+    }
+
+    .help-card h3 {
+      margin: 0 0 10px;
+      font-size: 1rem;
+    }
+
+    .help-card p {
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.6;
+    }
+
+    body.sidebar-collapsed .dashboard-layout {
+      grid-template-columns: 92px minmax(0, 1fr);
+    }
+
+    body.sidebar-collapsed .sidebar-heading,
+    body.sidebar-collapsed .link-label,
+    body.sidebar-collapsed .sidebar-note,
+    body.sidebar-collapsed .sidebar-action-label,
+    body.sidebar-collapsed .mini-stat-copy {
+      display: none;
+    }
+
+    body.sidebar-collapsed .sidebar-panel {
+      padding-inline: 12px;
+    }
+
+    body.sidebar-collapsed .sidebar-link {
+      justify-content: center;
+      padding-inline: 0;
+    }
+
+    body.sidebar-collapsed .mini-stat {
+      justify-content: center;
+      padding-bottom: 10px;
+    }
+
+    .footer-note {
+      margin-top: 24px;
+      text-align: center;
+      color: #6f7e98;
+      font-size: 0.92rem;
+    }
+
+    #boot-screen {
+      display: none;
+      position: fixed;
+      inset: 0;
+      z-index: 40;
+      background:
+        radial-gradient(circle at 50% 40%, rgba(66, 125, 255, 0.18), transparent 22%),
+        radial-gradient(circle at 50% 50%, rgba(95, 224, 255, 0.08), transparent 34%),
+        linear-gradient(180deg, rgba(8, 11, 17, 0.98), rgba(11, 13, 21, 0.98));
+      opacity: 1;
+      transition: opacity 0.72s ease;
+      pointer-events: none;
+    }
+
+    #boot-screen::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background:
+        linear-gradient(rgba(255, 255, 255, 0.015) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 255, 255, 0.015) 1px, transparent 1px);
+      background-size: 34px 34px;
+      opacity: 0.4;
+      mask-image: radial-gradient(circle at center, black 42%, transparent 92%);
+    }
+
+    #boot-brand {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      display: inline-flex;
+      align-items: center;
+      gap: 16px;
+      transform: translate(-50%, -50%) scale(1.05);
+      transform-origin: top left;
+      opacity: 0;
+      transition:
+        top 0.95s cubic-bezier(0.22, 1, 0.36, 1),
+        left 0.95s cubic-bezier(0.22, 1, 0.36, 1),
+        transform 0.95s cubic-bezier(0.22, 1, 0.36, 1),
+        opacity 0.7s ease;
+    }
+
+    #boot-logo {
+      width: clamp(114px, 14vw, 148px);
+      height: auto;
+      transition: transform 1.14s cubic-bezier(0.22, 1, 0.36, 1);
+      filter: drop-shadow(0 0 44px rgba(87, 193, 255, 0.18));
+    }
+
+    #boot-wordmark {
+      opacity: 0;
+      transform: translateX(-10px);
+      transition: opacity 0.55s ease, transform 0.7s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    #boot-wordmark .brand-wordmark {
+      font-size: clamp(1.24rem, 2vw, 1.56rem);
+    }
+
+    .js body.booting {
+      overflow: hidden;
+    }
+
+    .js body.booting #boot-screen {
+      display: block;
+    }
+
+    .js body.booting .app-shell {
+      opacity: 0;
+      transform: translateY(28px);
+      pointer-events: none;
+    }
+
+    .js body.booting .live-brand,
+    .js body.booting .top-nav {
+      opacity: 0;
+      transform: translateY(-8px);
+      transition: opacity 0.55s ease, transform 0.55s ease;
+    }
+
+    .js body.booting.boot-visible #boot-brand {
+      opacity: 1;
+      transform: translate(-50%, -50%) scale(1);
+    }
+
+    .js body.booting.boot-rotate #boot-logo {
+      transform: rotate(360deg);
+    }
+
+    .js body.booting.boot-dock #boot-brand {
+      top: 22px;
+      left: max(16px, calc((100vw - min(calc(100% - 32px), var(--container))) / 2 + 2px));
+      transform: translate(0, 0) scale(0.88);
+    }
+
+    .js body.booting.boot-dock #boot-wordmark,
+    .js body.booting.boot-dock .live-brand,
+    .js body.booting.boot-dock .top-nav {
+      opacity: 1;
+      transform: translate(0, 0);
+    }
+
+    .js body.booting.app-ready {
+      overflow: auto;
+    }
+
+    .js body.booting.app-ready #boot-screen {
+      opacity: 0;
+    }
+
+    .js body.booting.app-ready .app-shell {
+      opacity: 1;
+      transform: translateY(0);
+      pointer-events: auto;
+    }
+
+    .js body.booting.boot-dock .site-header {
+      background: rgba(9, 12, 19, 0.72);
+      backdrop-filter: blur(18px);
+      border-bottom-color: rgba(255, 255, 255, 0.05);
+    }
+
+    .fade-stagger {
+      opacity: 0;
+      transform: translateY(18px);
+    }
+
+    .js body.booting.app-ready .fade-stagger {
+      animation: fadeUp 0.8s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+    }
+
+    .js body.booting.app-ready .fade-stagger[data-delay="1"] {
+      animation-delay: 0.08s;
+    }
+
+    .js body.booting.app-ready .fade-stagger[data-delay="2"] {
+      animation-delay: 0.16s;
+    }
+
+    .js body.booting.app-ready .fade-stagger[data-delay="3"] {
+      animation-delay: 0.24s;
+    }
+
+    .js body.booting.app-ready .fade-stagger[data-delay="4"] {
+      animation-delay: 0.32s;
+    }
+
+    @keyframes fadeUp {
+      from {
+        opacity: 0;
+        transform: translateY(18px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @media (max-width: 980px) {
+      .dashboard-layout,
+      .hero,
+      .workspace-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .launch-grid,
+      .utility-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .hero-grid {
+        grid-template-rows: none;
+        grid-template-columns: 1fr 1fr;
+      }
+
+      .sidebar {
+        position: fixed;
+        top: var(--header-height);
+        left: 0;
+        width: min(320px, calc(100vw - 24px));
+        height: calc(100vh - var(--header-height));
+        padding: 12px 0 18px 12px;
+        transform: translateX(-105%);
+        opacity: 0;
+        visibility: hidden;
+        pointer-events: none;
+        transition:
+          transform 0.35s cubic-bezier(0.22, 1, 0.36, 1),
+          opacity 0.2s ease,
+          visibility 0s linear 0.35s;
+        z-index: 36;
+      }
+
+      body.sidebar-open .sidebar {
+        transform: translateX(0);
+        opacity: 1;
+        visibility: visible;
+        pointer-events: auto;
+        transition-delay: 0s;
+      }
+    }
+
+    @media (max-width: 760px) {
+      :root {
+        --header-height: 114px;
+      }
+
+      .container {
+        width: min(calc(100% - 24px), var(--container));
+      }
+
+      .header-row {
+        align-items: flex-start;
+        justify-content: flex-start;
+        flex-direction: column;
+        padding: 16px 0;
+        gap: 12px;
+      }
+
+      .header-actions {
+        width: 100%;
+        justify-content: space-between;
+      }
+
+      .header-tools {
+        width: 100%;
+        justify-content: flex-start;
+        flex-wrap: wrap;
+      }
+
+      .top-nav {
+        width: 100%;
+        overflow-x: auto;
+        scrollbar-width: none;
+      }
+
+      .top-nav::-webkit-scrollbar {
+        display: none;
+      }
+
+      .hero-copy,
+      .metric-card,
+      .panel {
+        padding: 20px;
+      }
+
+      .hero-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .task-form {
+        grid-template-columns: 1fr;
+      }
+
+      .panel-header,
+      .panel-footer {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
+      .timer-actions {
+        width: 100%;
+      }
+
+      .timer-actions .button-primary,
+      .timer-actions .button-secondary,
+      .panel-footer .button-primary,
+      .editor-actions .button-primary,
+      .editor-actions .button-secondary {
+        width: 100%;
+      }
+
+      .editor-topline,
+      .help-grid,
+      .choice-row {
+        grid-template-columns: 1fr;
+      }
+
+      .launch-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .theme-row {
+        align-items: flex-start;
+      }
+
+      .js body.booting.boot-dock #boot-brand {
+        top: 19px;
+        left: 13px;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .hero-copy h1 {
+        max-width: 9ch;
+      }
+
+      .task-item {
+        grid-template-columns: auto minmax(0, 1fr) auto;
+      }
+
+      .delete-task {
+        grid-column: 3;
+        justify-self: end;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      html {
+        scroll-behavior: auto;
+      }
+
+      *,
+      *::before,
+      *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+      }
+    }
+  </style>
+</head>
+<body class="booting">
+  <svg aria-hidden="true" width="0" height="0" style="position:absolute">
+    <defs>
+      <linearGradient id="stride-loop-a" x1="24" y1="72" x2="176" y2="128" gradientUnits="userSpaceOnUse">
+        <stop offset="0%" stop-color="#5fe0ff"></stop>
+        <stop offset="52%" stop-color="#62a8ff"></stop>
+        <stop offset="100%" stop-color="#8c7dff"></stop>
+      </linearGradient>
+      <linearGradient id="stride-loop-b" x1="44" y1="32" x2="156" y2="168" gradientUnits="userSpaceOnUse">
+        <stop offset="0%" stop-color="#8c7dff"></stop>
+        <stop offset="50%" stop-color="#62a8ff"></stop>
+        <stop offset="100%" stop-color="#5fe0ff"></stop>
+      </linearGradient>
+      <linearGradient id="stride-loop-c" x1="100" y1="22" x2="100" y2="178" gradientUnits="userSpaceOnUse">
+        <stop offset="0%" stop-color="#5fe0ff"></stop>
+        <stop offset="55%" stop-color="#78a8ff"></stop>
+        <stop offset="100%" stop-color="#a28bff"></stop>
+      </linearGradient>
+      <radialGradient id="stride-core" cx="50%" cy="50%" r="50%">
+        <stop offset="0%" stop-color="#d8fdff" stop-opacity="0.94"></stop>
+        <stop offset="55%" stop-color="#66c2ff" stop-opacity="0.82"></stop>
+        <stop offset="100%" stop-color="#131824" stop-opacity="0"></stop>
+      </radialGradient>
+      <filter id="stride-glow" x="-40%" y="-40%" width="180%" height="180%">
+        <feGaussianBlur stdDeviation="3.5" result="blur"></feGaussianBlur>
+        <feMerge>
+          <feMergeNode in="blur"></feMergeNode>
+          <feMergeNode in="SourceGraphic"></feMergeNode>
+        </feMerge>
+      </filter>
+    </defs>
+    <symbol id="stride-logo-symbol" viewBox="0 0 200 200">
+      <circle cx="100" cy="100" r="82" fill="url(#stride-core)" opacity="0.1"></circle>
+      <g fill="none" stroke-linecap="round" stroke-linejoin="round" filter="url(#stride-glow)">
+        <ellipse cx="100" cy="100" rx="58" ry="34" stroke="url(#stride-loop-a)" stroke-width="13" opacity="0.98"></ellipse>
+        <ellipse cx="100" cy="100" rx="58" ry="34" transform="rotate(60 100 100)" stroke="url(#stride-loop-b)" stroke-width="13" opacity="0.94"></ellipse>
+        <ellipse cx="100" cy="100" rx="58" ry="34" transform="rotate(120 100 100)" stroke="url(#stride-loop-c)" stroke-width="13" opacity="0.94"></ellipse>
+      </g>
+      <circle cx="100" cy="100" r="21" fill="#0f1117" opacity="0.96"></circle>
+      <circle cx="100" cy="100" r="14" fill="url(#stride-core)" opacity="0.92"></circle>
+    </symbol>
+  </svg>
+
+  <div id="boot-screen" aria-hidden="true">
+    <div id="boot-brand">
+      <svg id="boot-logo" class="stride-logo" viewBox="0 0 200 200" role="img" aria-label="Stride logo">
+        <use href="#stride-logo-symbol"></use>
+      </svg>
+      <div id="boot-wordmark">
+        <div class="brand-wordmark">
+          <span>Stride</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <header class="site-header">
+    <div class="container header-row">
+      <a class="brand live-brand" href="#top" aria-label="Stride home">
+        <svg class="stride-logo" viewBox="0 0 200 200" role="img" aria-hidden="true">
+          <use href="#stride-logo-symbol"></use>
+        </svg>
+        <div class="brand-wordmark">
+          <span>Stride</span>
+        </div>
+      </a>
+      <div class="header-actions">
+        <div class="header-tools" aria-label="Workspace controls">
+          <button class="icon-button" id="sidebarToggle" type="button" aria-label="Toggle sidebar">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M4 6h16"></path>
+              <path d="M4 12h9"></path>
+              <path d="M4 18h16"></path>
+            </svg>
+          </button>
+          <button class="icon-button" id="backButton" type="button" aria-label="Go to previous section">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M15 18l-6-6 6-6"></path>
+            </svg>
+          </button>
+          <button class="icon-button" id="forwardButton" type="button" aria-label="Go to next section">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M9 6l6 6-6 6"></path>
+            </svg>
+          </button>
+          <button class="button-secondary help-button" id="helpToggle" type="button">Help</button>
+          <button class="button-secondary help-button" id="focusModeToggle" type="button">Focus mode</button>
+        </div>
+        <nav class="top-nav" aria-label="Primary navigation">
+          <a href="#dashboard" data-section-link="dashboard">Overview</a>
+          <a href="#tasks" data-section-link="tasks">Tasks</a>
+          <a href="#focus" data-section-link="focus">Focus</a>
+          <a href="#launch" data-section-link="launch">Links</a>
+          <a href="#reset" data-section-link="reset">Reset</a>
+          <a href="#editor" data-section-link="editor">Editor</a>
+          <a href="#reflection" data-section-link="reflection">Reflect</a>
+        </nav>
+      </div>
+    </div>
+  </header>
+
+  <main class="app-shell" id="top">
+    <div class="container">
+      <div class="dashboard-layout">
+        <aside class="sidebar fade-stagger" data-delay="1" id="workspaceSidebar" aria-label="Workspace sidebar">
+          <div class="sidebar-shell">
+            <section class="sidebar-panel">
+              <p class="panel-label">Guidance Lane</p>
+              <h2 class="sidebar-heading">Keep your route visible and your next move close.</h2>
+              <div class="sidebar-nav">
+                <a class="sidebar-link" href="#dashboard" data-section-link="dashboard">
+                  <svg class="sidebar-icon" viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M4 11l8-7 8 7"></path>
+                    <path d="M6 10v10h12V10"></path>
+                  </svg>
+                  <span class="link-label">Overview</span>
+                </a>
+                <a class="sidebar-link" href="#tasks" data-section-link="tasks">
+                  <svg class="sidebar-icon" viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M9 6h11"></path>
+                    <path d="M9 12h11"></path>
+                    <path d="M9 18h11"></path>
+                    <path d="M4 6h.01"></path>
+                    <path d="M4 12h.01"></path>
+                    <path d="M4 18h.01"></path>
+                  </svg>
+                  <span class="link-label">Tasks</span>
+                </a>
+                <a class="sidebar-link" href="#focus" data-section-link="focus">
+                  <svg class="sidebar-icon" viewBox="0 0 24 24" aria-hidden="true">
+                    <circle cx="12" cy="12" r="8"></circle>
+                    <path d="M12 8v5l3 2"></path>
+                  </svg>
+                  <span class="link-label">Focus</span>
+                </a>
+                <a class="sidebar-link" href="#launch" data-section-link="launch">
+                  <svg class="sidebar-icon" viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M12 3v18"></path>
+                    <path d="M3 12h18"></path>
+                    <path d="M6 6l12 12"></path>
+                    <path d="M18 6L6 18"></path>
+                  </svg>
+                  <span class="link-label">Links</span>
+                </a>
+                <a class="sidebar-link" href="#reset" data-section-link="reset">
+                  <svg class="sidebar-icon" viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M12 3a9 9 0 1 0 9 9"></path>
+                    <path d="M12 7v5l3 3"></path>
+                  </svg>
+                  <span class="link-label">Reset</span>
+                </a>
+                <a class="sidebar-link" href="#editor" data-section-link="editor">
+                  <svg class="sidebar-icon" viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M4 20h16"></path>
+                    <path d="M7 16l9-9 3 3-9 9H7z"></path>
+                  </svg>
+                  <span class="link-label">Editor</span>
+                </a>
+                <a class="sidebar-link" href="#reflection" data-section-link="reflection">
+                  <svg class="sidebar-icon" viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M5 4h14v14H5z"></path>
+                    <path d="M9 9h6"></path>
+                    <path d="M9 13h6"></path>
+                  </svg>
+                  <span class="link-label">Reflect</span>
+                </a>
+              </div>
+            </section>
+
+            <section class="sidebar-panel">
+              <p class="panel-label">Pulse</p>
+              <div class="mini-stat-grid">
+                <div class="mini-stat">
+                  <span class="mini-stat-copy">Active steps</span>
+                  <span class="mini-stat-value" id="sidebarRemaining">0</span>
+                </div>
+                <div class="mini-stat">
+                  <span class="mini-stat-copy">Completed</span>
+                  <span class="mini-stat-value" id="sidebarCompleted">0</span>
+                </div>
+                <div class="mini-stat">
+                  <span class="mini-stat-copy">Focus state</span>
+                  <span class="mini-stat-value" id="sidebarSessionState">Queued</span>
+                </div>
+              </div>
+            </section>
+
+            <section class="sidebar-panel">
+              <p class="panel-label">Help</p>
+              <p class="sidebar-note">Tasks, notes, theme choices, and your mini game state stay local in your browser. Open the guide any time for a quick reset.</p>
+              <button class="button-secondary sidebar-help" id="sidebarHelp" type="button">
+                <span class="sidebar-action-label">Open help</span>
+              </button>
+            </section>
+          </div>
+        </aside>
+
+        <div class="content-column">
+          <section class="hero">
+            <div class="hero-copy fade-stagger" data-delay="1" id="dashboard">
+              <p class="eyebrow">Guided productivity without the pressure</p>
+              <h1 id="welcomeHeading">Make a steady move forward.</h1>
+              <p>
+                Stride keeps your next step visible, gives you a clean place to focus,
+                and adds a few helpful shortcuts when you want to switch gears.
+              </p>
+              <div class="hero-meta" id="todayLabel">Today is in motion.</div>
+            </div>
+            <div class="hero-grid">
+              <article class="metric-card fade-stagger" data-delay="2" aria-live="polite">
+                <div>
+                  <div class="metric-label">Today&apos;s Progress</div>
+                  <div class="metric-value" id="progressValue">0%</div>
+                </div>
+                <div>
+                  <div class="progress-track" aria-hidden="true">
+                    <div class="progress-fill" id="progressFill"></div>
+                  </div>
+                  <p class="metric-support" id="progressDetail">Add a task to start building momentum.</p>
+                </div>
+              </article>
+              <article class="metric-card fade-stagger" data-delay="3" aria-live="polite">
+                <div class="metric-label">Current Task</div>
+                <div class="metric-value" id="currentTaskTitle" style="font-size:clamp(1.4rem,3vw,2rem); line-height:1.2;">No task selected</div>
+                <p class="metric-support" id="currentTaskHint">Choose the next step you want to move.</p>
+              </article>
+            </div>
+          </section>
+
+          <section class="workspace-grid">
+            <section class="panel fade-stagger" data-delay="2" id="tasks">
+              <div class="panel-header">
+                <div>
+                  <p class="panel-label">Task System</p>
+                  <h2 class="panel-title">Build momentum one step at a time</h2>
+                  <p class="panel-copy">Keep the list small, specific, and actionable. This space is here to guide your attention, not trap it.</p>
+                </div>
+                <div class="subtle-chip" id="taskCounter">0 active</div>
+              </div>
+
+              <form class="task-form" id="taskForm">
+                <label class="sr-only" for="taskInput">Add a task</label>
+                <input
+                  id="taskInput"
+                  class="task-input"
+                  type="text"
+                  maxlength="160"
+                  placeholder="Write the next step you can actually start..."
+                  autocomplete="off"
+                >
+                <label class="sr-only" for="taskPriority">Task priority</label>
+                <select id="taskPriority" class="task-input select-input">
+                  <option value="high">High</option>
+                  <option value="medium" selected>Medium</option>
+                  <option value="low">Low</option>
+                </select>
+                <button class="button-primary" type="submit">
+                  <svg class="button-icon" viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M12 5v14"></path>
+                    <path d="M5 12h14"></path>
+                  </svg>
+                  Add task
+                </button>
+              </form>
+
+              <div class="task-toolbar">
+                <div class="filter-chips" aria-label="Task filters">
+                  <button class="filter-chip is-active" data-task-filter="all" type="button">All</button>
+                  <button class="filter-chip" data-task-filter="active" type="button">Active</button>
+                  <button class="filter-chip" data-task-filter="completed" type="button">Completed</button>
+                </div>
+                <div class="subtle-chip">Top 3 today</div>
+              </div>
+
+              <div class="top-three" id="topThreeList" aria-live="polite"></div>
+              <p class="task-meta" id="taskMeta">No tasks yet. Give yourself a clear place to begin.</p>
+              <ul class="task-list" id="taskList" aria-live="polite"></ul>
+              <p class="empty-state" id="emptyState">Your list is clear. Add the next step you want to move.</p>
+            </section>
+
+            <div class="stacked-panels">
+              <section class="panel timer-panel fade-stagger" data-delay="3" id="focus">
+                <div class="panel-header">
+                  <div>
+                    <p class="panel-label">Focus Timer</p>
+                    <h2 class="panel-title">Pomodoro, kept gentle</h2>
+                    <p class="panel-copy">Use a 25 minute focus block, then take five to reset. The pacing is structured, but the choice stays yours.</p>
+                  </div>
+                </div>
+
+                <div class="mode-pills" aria-hidden="true">
+                  <span class="mode-pill is-active" id="focusPill">25m focus</span>
+                  <span class="mode-pill" id="breakPill">5m break</span>
+                </div>
+
+                <div class="timer-face">
+                  <div class="timer-label" id="timerLabel">Focus session</div>
+                  <div class="timer-display" id="timerDisplay">25:00</div>
+                  <p class="timer-status" id="timerStatus">One thing at a time. Let the rest wait for a little while.</p>
+                </div>
+
+                <div class="timer-actions">
+                  <button class="button-primary" id="timerToggle" type="button">Start focus</button>
+                  <button class="button-secondary" id="timerReset" type="button">Reset</button>
+                </div>
+              </section>
+
+              <section class="panel fade-stagger" data-delay="4" id="reflection">
+                <div class="panel-header">
+                  <div>
+                    <p class="panel-label">Reflection</p>
+                    <h2 class="panel-title">What did you learn today?</h2>
+                    <p class="panel-copy">Capture one useful idea, one pattern you noticed, or one thing you want to carry into tomorrow.</p>
+                  </div>
+                </div>
+
+                <label class="sr-only" for="reflectionInput">Reflection input</label>
+                <textarea
+                  id="reflectionInput"
+                  class="reflection-input"
+                  placeholder="A small note is enough. What shifted, clicked, or became clearer?"
+                ></textarea>
+                <div class="panel-footer">
+                  <button class="button-primary" id="saveReflection" type="button">
+                    <svg class="button-icon" viewBox="0 0 24 24" aria-hidden="true">
+                      <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2Z"></path>
+                      <path d="M17 21v-8H7v8"></path>
+                      <path d="M7 3v5h8"></path>
+                    </svg>
+                    Save reflection
+                  </button>
+                  <p class="save-status" id="saveStatus" aria-live="polite"></p>
+                </div>
+              </section>
+            </div>
+          </section>
+
+          <section class="workspace-grid">
+            <section class="panel fade-stagger" data-delay="2" id="launch">
+              <div class="panel-header">
+                <div>
+                  <p class="panel-label">Quick Launch</p>
+                  <h2 class="panel-title">Useful links without leaving your flow</h2>
+                  <p class="panel-copy">Open the tools you reach for most often in a fresh tab, then jump right back into your workspace.</p>
+                </div>
+              </div>
+
+              <div class="launch-grid">
+                <a class="launch-card" href="https://chatgpt.com/" target="_blank" rel="noreferrer noopener">
+                  <div class="launch-topline">
+                    <div class="launch-icon">
+                      <svg viewBox="0 0 24 24" aria-hidden="true">
+                        <path d="M12 3a4 4 0 0 1 4 4v1.2a4 4 0 0 1-4 4"></path>
+                        <path d="M12 21a4 4 0 0 1-4-4v-1.2a4 4 0 0 1 4-4"></path>
+                        <path d="M5.2 8.1a4 4 0 0 1 5.5-1.5l1 .6a4 4 0 0 1 1.5 5.5"></path>
+                        <path d="M18.8 15.9a4 4 0 0 1-5.5 1.5l-1-.6a4 4 0 0 1-1.5-5.5"></path>
+                      </svg>
+                    </div>
+                    <svg class="launch-arrow" viewBox="0 0 24 24" aria-hidden="true">
+                      <path d="M7 17L17 7"></path>
+                      <path d="M8 7h9v9"></path>
+                    </svg>
+                  </div>
+                  <h3>ChatGPT</h3>
+                  <p>Open a quick reasoning partner for brainstorming, rewriting, or untangling a problem.</p>
+                </a>
+
+                <a class="launch-card" href="https://calendar.google.com/" target="_blank" rel="noreferrer noopener">
+                  <div class="launch-topline">
+                    <div class="launch-icon">
+                      <svg viewBox="0 0 24 24" aria-hidden="true">
+                        <path d="M7 2v4"></path>
+                        <path d="M17 2v4"></path>
+                        <rect x="3" y="5" width="18" height="16" rx="2"></rect>
+                        <path d="M3 10h18"></path>
+                      </svg>
+                    </div>
+                    <svg class="launch-arrow" viewBox="0 0 24 24" aria-hidden="true">
+                      <path d="M7 17L17 7"></path>
+                      <path d="M8 7h9v9"></path>
+                    </svg>
+                  </div>
+                  <h3>Calendar</h3>
+                  <p>Check your next commitment, block time, or make room for the work that matters today.</p>
+                </a>
+
+                <a class="launch-card" href="https://mail.google.com/" target="_blank" rel="noreferrer noopener">
+                  <div class="launch-topline">
+                    <div class="launch-icon">
+                      <svg viewBox="0 0 24 24" aria-hidden="true">
+                        <path d="M4 6h16v12H4z"></path>
+                        <path d="M4 7l8 6 8-6"></path>
+                      </svg>
+                    </div>
+                    <svg class="launch-arrow" viewBox="0 0 24 24" aria-hidden="true">
+                      <path d="M7 17L17 7"></path>
+                      <path d="M8 7h9v9"></path>
+                    </svg>
+                  </div>
+                  <h3>Gmail</h3>
+                  <p>Clear a message, send a reply, or keep your inbox from quietly building pressure.</p>
+                </a>
+
+                <a class="launch-card" href="https://www.notion.so/" target="_blank" rel="noreferrer noopener">
+                  <div class="launch-topline">
+                    <div class="launch-icon">
+                      <svg viewBox="0 0 24 24" aria-hidden="true">
+                        <path d="M5 4l11-1 3 3v14l-11 1-3-3z"></path>
+                        <path d="M8 8v8"></path>
+                        <path d="M8 8l6 8V8"></path>
+                      </svg>
+                    </div>
+                    <svg class="launch-arrow" viewBox="0 0 24 24" aria-hidden="true">
+                      <path d="M7 17L17 7"></path>
+                      <path d="M8 7h9v9"></path>
+                    </svg>
+                  </div>
+                  <h3>Notion</h3>
+                  <p>Jump to your project system, dashboard, or personal wiki when you need a bigger canvas.</p>
+                </a>
+
+                <a class="launch-card" href="https://keep.google.com/" target="_blank" rel="noreferrer noopener">
+                  <div class="launch-topline">
+                    <div class="launch-icon">
+                      <svg viewBox="0 0 24 24" aria-hidden="true">
+                        <path d="M6 4h12l2 5-8 11L4 9z"></path>
+                        <path d="M9 9h6"></path>
+                      </svg>
+                    </div>
+                    <svg class="launch-arrow" viewBox="0 0 24 24" aria-hidden="true">
+                      <path d="M7 17L17 7"></path>
+                      <path d="M8 7h9v9"></path>
+                    </svg>
+                  </div>
+                  <h3>Keep</h3>
+                  <p>Drop a quick note, grocery list, reminder, or idea before it disappears into the fog.</p>
+                </a>
+
+                <a class="launch-card" href="https://drive.google.com/" target="_blank" rel="noreferrer noopener">
+                  <div class="launch-topline">
+                    <div class="launch-icon">
+                      <svg viewBox="0 0 24 24" aria-hidden="true">
+                        <path d="M8 4l4 7-4 7H4l4-7-4-7z"></path>
+                        <path d="M8 4h8l4 7h-8z"></path>
+                        <path d="M8 18h8l4-7"></path>
+                      </svg>
+                    </div>
+                    <svg class="launch-arrow" viewBox="0 0 24 24" aria-hidden="true">
+                      <path d="M7 17L17 7"></path>
+                      <path d="M8 7h9v9"></path>
+                    </svg>
+                  </div>
+                  <h3>Drive</h3>
+                  <p>Grab a file, share a document, or drop into the folders that keep the rest of your day moving.</p>
+                </a>
+
+                <a
+                  class="launch-card"
+                  href="https://www.msn.com/en-in/play"
+                  target="_blank"
+                  rel="noreferrer noopener"
+                  data-confirm-redirect="Redirect to Play Web on MSN?"
+                >
+                  <div class="launch-topline">
+                    <div class="launch-icon">
+                      <svg viewBox="0 0 24 24" aria-hidden="true">
+                        <path d="M8 6l10 6-10 6z"></path>
+                        <rect x="3" y="4" width="18" height="16" rx="3"></rect>
+                      </svg>
+                    </div>
+                    <svg class="launch-arrow" viewBox="0 0 24 24" aria-hidden="true">
+                      <path d="M7 17L17 7"></path>
+                      <path d="M8 7h9v9"></path>
+                    </svg>
+                  </div>
+                  <h3>Play Web</h3>
+                  <p>Open MSN Play after a confirmation prompt when you want browser games in a separate tab.</p>
+                </a>
+
+                <a
+                  class="launch-card"
+                  href="https://www.poki.com"
+                  target="_blank"
+                  rel="noreferrer noopener"
+                  data-confirm-redirect="Redirect to Play Online and Offline on Poki?"
+                >
+                  <div class="launch-topline">
+                    <div class="launch-icon">
+                      <svg viewBox="0 0 24 24" aria-hidden="true">
+                        <path d="M4 7h16"></path>
+                        <path d="M4 12h16"></path>
+                        <path d="M4 17h16"></path>
+                        <path d="M9 4v16"></path>
+                      </svg>
+                    </div>
+                    <svg class="launch-arrow" viewBox="0 0 24 24" aria-hidden="true">
+                      <path d="M7 17L17 7"></path>
+                      <path d="M8 7h9v9"></path>
+                    </svg>
+                  </div>
+                  <h3>Play Online and Offline</h3>
+                  <p>Open Poki after a confirmation prompt when you want a bigger game library outside the app.</p>
+                </a>
+              </div>
+            </section>
+
+            <div class="stacked-panels">
+              <section class="panel fade-stagger" data-delay="3" id="reset">
+                <div class="panel-header">
+                  <div>
+                    <p class="panel-label">Reset Lab</p>
+                    <h2 class="panel-title">Useful options, quick picks, and a calmer head</h2>
+                    <p class="panel-copy">Switch the look, run a breathing cycle, or let the app choose your next tiny move when your brain stalls out.</p>
+                  </div>
+                </div>
+
+                <div class="utility-grid">
+                  <section class="utility-card">
+                    <div class="breath-shell">
+                      <div class="breath-ring" aria-hidden="true">
+                        <div class="breath-orb" id="breathOrb" data-phase="exhale"></div>
+                      </div>
+                      <div class="fun-output" id="breatheState">Start a gentle cycle: inhale, hold, exhale.</div>
+                      <button class="button-primary" id="breatheToggle" type="button">Start breathing</button>
+                    </div>
+                  </section>
+
+                  <div class="utility-stack">
+                    <section class="utility-card">
+                      <p class="panel-label">Pick One</p>
+                      <h3>Let Stride choose for you</h3>
+                      <p>Type a few options separated by commas when you want a nudge instead of another debate.</p>
+                      <div class="choice-row">
+                        <input id="choiceInput" class="task-input" type="text" placeholder="walk, tea, stretch, reply to Sam">
+                        <button class="button-secondary" id="pickChoice" type="button">Pick</button>
+                      </div>
+                      <p class="fun-output" id="choiceResult" aria-live="polite">Need a nudge? Enter a few options and let it pick one.</p>
+                    </section>
+
+                    <section class="utility-card">
+                      <p class="panel-label">Micro Reset</p>
+                      <h3>Quick anti-stress prompt</h3>
+                      <p>Grab a tiny action that clears mental static without derailing the rest of your day.</p>
+                      <div class="panel-footer">
+                        <button class="button-secondary" id="microResetButton" type="button">Give me one</button>
+                        <p class="fun-output" id="microResetOutput" aria-live="polite">Try a 10 second reset between tasks.</p>
+                      </div>
+                    </section>
+                  </div>
+                </div>
+
+                <div class="theme-row">
+                  <div>
+                    <p class="panel-label">Theme</p>
+                    <div class="theme-status" id="themeStatus">Aurora is active.</div>
+                  </div>
+                  <div class="theme-buttons">
+                    <button class="theme-button" data-theme-choice="aurora" type="button">Aurora</button>
+                    <button class="theme-button" data-theme-choice="glacier" type="button">Glacier</button>
+                    <button class="theme-button" data-theme-choice="pulse" type="button">Pulse</button>
+                    <button class="theme-button" data-theme-choice="mint" type="button">Mint</button>
+                  </div>
+                </div>
+              </section>
+
+              <section class="panel fade-stagger" data-delay="4" id="games">
+                <div class="panel-header">
+                  <div>
+                    <p class="panel-label">Pocket Arcade</p>
+                    <h2 class="panel-title">Five quick anti-stress games</h2>
+                    <p class="panel-copy">Small games, fast rounds, zero setup. Pick the kind of reset your brain wants right now.</p>
+                  </div>
+                </div>
+
+                <div class="game-switcher" role="tablist" aria-label="Game selector">
+                  <button class="game-tab is-active" data-game-tab="zen" type="button">Zen Tap</button>
+                  <button class="game-tab" data-game-tab="memory" type="button">Memory Lights</button>
+                  <button class="game-tab" data-game-tab="glow" type="button">Glow Match</button>
+                  <button class="game-tab" data-game-tab="luck" type="button">Lucky Orbit</button>
+                  <button class="game-tab" data-game-tab="sweep" type="button">Tile Sweep</button>
+                </div>
+
+                <article class="game-pane" data-game-pane="zen">
+                  <div class="game-caption">Tap the glow as many times as you can in twenty seconds.</div>
+                  <div class="zen-meta">
+                    <div class="zen-stat">
+                      <span class="zen-stat-label">Time</span>
+                      <span class="zen-stat-value" id="zenTime">20s</span>
+                    </div>
+                    <div class="zen-stat">
+                      <span class="zen-stat-label">Score</span>
+                      <span class="zen-stat-value" id="zenScore">0</span>
+                    </div>
+                    <div class="zen-stat">
+                      <span class="zen-stat-label">High</span>
+                      <span class="zen-stat-value" id="zenHigh">0</span>
+                    </div>
+                  </div>
+
+                  <div class="zen-board" id="zenBoard">
+                    <div class="zen-message" id="zenMessage">Press start, then tap the glow before it slips away.</div>
+                    <button class="zen-target" id="zenTarget" type="button" hidden aria-label="Tap the glow"></button>
+                  </div>
+
+                  <div class="panel-footer">
+                    <div class="editor-actions">
+                      <button class="button-primary" id="zenStart" type="button">Start game</button>
+                      <button class="button-secondary" id="zenReset" type="button">Reset game</button>
+                    </div>
+                    <p class="zen-status" id="zenStatus" aria-live="polite">A quick game can be enough to break a stress loop.</p>
+                  </div>
+                </article>
+
+                <article class="game-pane" data-game-pane="memory" hidden>
+                  <div class="game-caption">Watch the pattern, then repeat it from memory. Each round adds one more light.</div>
+                  <div class="zen-meta">
+                    <div class="zen-stat">
+                      <span class="zen-stat-label">Round</span>
+                      <span class="zen-stat-value" id="memoryRound">0</span>
+                    </div>
+                    <div class="zen-stat">
+                      <span class="zen-stat-label">Cleared</span>
+                      <span class="zen-stat-value" id="memoryScore">0</span>
+                    </div>
+                    <div class="zen-stat">
+                      <span class="zen-stat-label">Best</span>
+                      <span class="zen-stat-value" id="memoryHigh">0</span>
+                    </div>
+                  </div>
+
+                  <div class="memory-grid">
+                    <button class="memory-pad" data-memory-pad="0" type="button">North</button>
+                    <button class="memory-pad" data-memory-pad="1" type="button">East</button>
+                    <button class="memory-pad" data-memory-pad="2" type="button">South</button>
+                    <button class="memory-pad" data-memory-pad="3" type="button">West</button>
+                  </div>
+
+                  <div class="panel-footer">
+                    <div class="editor-actions">
+                      <button class="button-primary" id="memoryStart" type="button">Start round</button>
+                      <button class="button-secondary" id="memoryReset" type="button">Reset</button>
+                    </div>
+                    <p class="zen-status" id="memoryStatus" aria-live="polite">Watch the sequence, then repeat it.</p>
+                  </div>
+                </article>
+
+                <article class="game-pane" data-game-pane="glow" hidden>
+                  <div class="game-caption">Match the target shade. Clean streaks raise your best score.</div>
+                  <div class="glow-target">
+                    <span class="glow-swatch" id="glowTargetSwatch"></span>
+                    <div>
+                      <div class="panel-label">Target shade</div>
+                      <div class="glow-target-name" id="glowTargetName">Cyan</div>
+                    </div>
+                  </div>
+
+                  <div class="zen-meta">
+                    <div class="zen-stat">
+                      <span class="zen-stat-label">Score</span>
+                      <span class="zen-stat-value" id="glowScore">0</span>
+                    </div>
+                    <div class="zen-stat">
+                      <span class="zen-stat-label">Best</span>
+                      <span class="zen-stat-value" id="glowHigh">0</span>
+                    </div>
+                    <div class="zen-stat">
+                      <span class="zen-stat-label">Flow</span>
+                      <span class="zen-stat-value" id="glowFlow">Live</span>
+                    </div>
+                  </div>
+
+                  <div class="glow-grid">
+                    <button class="glow-choice" data-glow-choice="0" type="button"></button>
+                    <button class="glow-choice" data-glow-choice="1" type="button"></button>
+                    <button class="glow-choice" data-glow-choice="2" type="button"></button>
+                  </div>
+
+                  <div class="panel-footer">
+                    <button class="button-secondary" id="glowReset" type="button">Reset streak</button>
+                    <p class="zen-status" id="glowStatus" aria-live="polite">Pick the swatch that matches the target.</p>
+                  </div>
+                </article>
+
+                <article class="game-pane" data-game-pane="luck" hidden>
+                  <div class="game-caption">One card is hiding the glow. Find it to build a streak.</div>
+                  <div class="zen-meta">
+                    <div class="zen-stat">
+                      <span class="zen-stat-label">Streak</span>
+                      <span class="zen-stat-value" id="luckStreak">0</span>
+                    </div>
+                    <div class="zen-stat">
+                      <span class="zen-stat-label">Best</span>
+                      <span class="zen-stat-value" id="luckBest">0</span>
+                    </div>
+                    <div class="zen-stat">
+                      <span class="zen-stat-label">Mode</span>
+                      <span class="zen-stat-value" id="luckMode">Pick</span>
+                    </div>
+                  </div>
+
+                  <div class="luck-grid">
+                    <button class="luck-card" data-luck-card="0" type="button">Orb 1</button>
+                    <button class="luck-card" data-luck-card="1" type="button">Orb 2</button>
+                    <button class="luck-card" data-luck-card="2" type="button">Orb 3</button>
+                    <button class="luck-card" data-luck-card="3" type="button">Orb 4</button>
+                    <button class="luck-card" data-luck-card="4" type="button">Orb 5</button>
+                    <button class="luck-card" data-luck-card="5" type="button">Orb 6</button>
+                  </div>
+
+                  <div class="panel-footer">
+                    <button class="button-secondary" id="luckReset" type="button">Reset streak</button>
+                    <p class="zen-status" id="luckStatus" aria-live="polite">Pick a card and see if you find the glow.</p>
+                  </div>
+                </article>
+
+                <article class="game-pane" data-game-pane="sweep" hidden>
+                  <div class="game-caption">Clear the lit tiles before they shift. Twenty seconds, fast hands.</div>
+                  <div class="zen-meta">
+                    <div class="zen-stat">
+                      <span class="zen-stat-label">Time</span>
+                      <span class="zen-stat-value" id="sweepTime">20s</span>
+                    </div>
+                    <div class="zen-stat">
+                      <span class="zen-stat-label">Score</span>
+                      <span class="zen-stat-value" id="sweepScore">0</span>
+                    </div>
+                    <div class="zen-stat">
+                      <span class="zen-stat-label">Best</span>
+                      <span class="zen-stat-value" id="sweepHigh">0</span>
+                    </div>
+                  </div>
+
+                  <div class="sweep-grid">
+                    <button class="sweep-cell" data-sweep-cell="0" type="button" aria-label="Sweep tile 1"></button>
+                    <button class="sweep-cell" data-sweep-cell="1" type="button" aria-label="Sweep tile 2"></button>
+                    <button class="sweep-cell" data-sweep-cell="2" type="button" aria-label="Sweep tile 3"></button>
+                    <button class="sweep-cell" data-sweep-cell="3" type="button" aria-label="Sweep tile 4"></button>
+                    <button class="sweep-cell" data-sweep-cell="4" type="button" aria-label="Sweep tile 5"></button>
+                    <button class="sweep-cell" data-sweep-cell="5" type="button" aria-label="Sweep tile 6"></button>
+                    <button class="sweep-cell" data-sweep-cell="6" type="button" aria-label="Sweep tile 7"></button>
+                    <button class="sweep-cell" data-sweep-cell="7" type="button" aria-label="Sweep tile 8"></button>
+                    <button class="sweep-cell" data-sweep-cell="8" type="button" aria-label="Sweep tile 9"></button>
+                  </div>
+
+                  <div class="panel-footer">
+                    <div class="editor-actions">
+                      <button class="button-primary" id="sweepStart" type="button">Start round</button>
+                      <button class="button-secondary" id="sweepReset" type="button">Reset</button>
+                    </div>
+                    <p class="zen-status" id="sweepStatus" aria-live="polite">Start a 20 second clearing round.</p>
+                  </div>
+                </article>
+              </section>
+            </div>
+          </section>
+
+          <section class="panel file-editor-panel fade-stagger" data-delay="4" id="editor">
+            <div class="panel-header">
+              <div>
+                <p class="panel-label">File Edit Window</p>
+                <h2 class="panel-title">Keep a live working file inside the flow</h2>
+                <p class="panel-copy">Use this space for outlines, checkpoints, or a rough draft while the rest of your workspace stays visible.</p>
+              </div>
+            </div>
+
+            <div class="window-bar" aria-hidden="true">
+              <div class="window-left">
+                <div class="window-dots">
+                  <span class="window-dot"></span>
+                  <span class="window-dot"></span>
+                  <span class="window-dot"></span>
+                </div>
+                <div class="window-tab" id="fileTabLabel">working-file.stride</div>
+              </div>
+              <div class="window-meta">Local editor</div>
+            </div>
+
+            <div class="editor-topline">
+              <div class="file-name-wrap">
+                <label class="file-name-label" for="fileNameInput">File name</label>
+                <input id="fileNameInput" class="task-input file-name-input" type="text" maxlength="60" placeholder="working-file.stride">
+              </div>
+              <div class="editor-hint">The file stays in your browser until you choose to download it.</div>
+            </div>
+
+            <label class="sr-only" for="fileEditorInput">Workspace file editor</label>
+            <textarea id="fileEditorInput" class="editor-area" spellcheck="false"></textarea>
+            <div class="panel-footer">
+              <div class="editor-actions">
+                <button class="button-primary" id="saveFileButton" type="button">Save file</button>
+                <button class="button-secondary" id="downloadFileButton" type="button">Download .txt</button>
+              </div>
+              <p class="save-status" id="fileStatus" aria-live="polite"></p>
+            </div>
+          </section>
+
+          <p class="footer-note">Stride keeps things moving without trying to take the wheel.</p>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <div class="sidebar-scrim" id="sidebarScrim" hidden></div>
+
+  <div class="help-backdrop" id="helpBackdrop" hidden>
+    <div class="help-modal" role="dialog" aria-modal="true" aria-labelledby="helpTitle">
+      <div class="panel-header">
+        <div>
+          <p class="panel-label">Help</p>
+          <h2 class="panel-title" id="helpTitle">How Stride works</h2>
+          <p class="panel-copy">A calm map of the workspace, so you can use the parts you need and ignore the rest.</p>
+        </div>
+        <button class="icon-button" id="helpClose" type="button" aria-label="Close help">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M6 6l12 12"></path>
+            <path d="M18 6L6 18"></path>
+          </svg>
+        </button>
+      </div>
+
+      <div class="help-grid">
+        <article class="help-card">
+          <h3>Sidebar and direction controls</h3>
+          <p>The sidebar keeps each workspace section one tap away. Use the back and forward buttons to step through the flow in order, from overview to reset tools.</p>
+        </article>
+        <article class="help-card">
+          <h3>Tasks and progress</h3>
+          <p>Add specific next actions, give them a priority, filter the list by status, and let the Top 3 strip keep the most useful work visible.</p>
+        </article>
+        <article class="help-card">
+          <h3>Useful links and options</h3>
+          <p>Quick Launch opens the outside tools you probably use anyway, while Focus mode hides the playful extras so you can work with less visual drag.</p>
+        </article>
+        <article class="help-card">
+          <h3>Game, notes, and exports</h3>
+          <p>The arcade now has five quick games, reflection is for short learning notes, and the file window is for longer working drafts. Everything here saves locally.</p>
+        </article>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    (function () {
+      const body = document.body;
+      const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      const bootSteps = prefersReducedMotion
+        ? { visible: 40, rotate: 90, dock: 200, ready: 320 }
+        : { visible: 160, rotate: 900, dock: 2250, ready: 3300 };
+
+      const taskForm = document.getElementById("taskForm");
+      const taskInput = document.getElementById("taskInput");
+      const taskPriority = document.getElementById("taskPriority");
+      const taskList = document.getElementById("taskList");
+      const emptyState = document.getElementById("emptyState");
+      const topThreeList = document.getElementById("topThreeList");
+      const taskFilterButtons = Array.from(document.querySelectorAll("[data-task-filter]"));
+      const progressValue = document.getElementById("progressValue");
+      const progressFill = document.getElementById("progressFill");
+      const progressDetail = document.getElementById("progressDetail");
+      const currentTaskTitle = document.getElementById("currentTaskTitle");
+      const currentTaskHint = document.getElementById("currentTaskHint");
+      const taskCounter = document.getElementById("taskCounter");
+      const taskMeta = document.getElementById("taskMeta");
+      const todayLabel = document.getElementById("todayLabel");
+      const welcomeHeading = document.getElementById("welcomeHeading");
+      const reflectionInput = document.getElementById("reflectionInput");
+      const saveReflectionButton = document.getElementById("saveReflection");
+      const saveStatus = document.getElementById("saveStatus");
+      const timerLabel = document.getElementById("timerLabel");
+      const timerDisplay = document.getElementById("timerDisplay");
+      const timerStatus = document.getElementById("timerStatus");
+      const timerToggle = document.getElementById("timerToggle");
+      const timerReset = document.getElementById("timerReset");
+      const focusPill = document.getElementById("focusPill");
+      const breakPill = document.getElementById("breakPill");
+      const timerPanel = document.getElementById("focus");
+      const sidebarToggle = document.getElementById("sidebarToggle");
+      const backButton = document.getElementById("backButton");
+      const forwardButton = document.getElementById("forwardButton");
+      const helpToggle = document.getElementById("helpToggle");
+      const focusModeToggle = document.getElementById("focusModeToggle");
+      const sidebarHelp = document.getElementById("sidebarHelp");
+      const helpBackdrop = document.getElementById("helpBackdrop");
+      const helpClose = document.getElementById("helpClose");
+      const sidebarScrim = document.getElementById("sidebarScrim");
+      const sidebarRemaining = document.getElementById("sidebarRemaining");
+      const sidebarCompleted = document.getElementById("sidebarCompleted");
+      const sidebarSessionState = document.getElementById("sidebarSessionState");
+      const fileNameInput = document.getElementById("fileNameInput");
+      const fileEditorInput = document.getElementById("fileEditorInput");
+      const fileTabLabel = document.getElementById("fileTabLabel");
+      const saveFileButton = document.getElementById("saveFileButton");
+      const downloadFileButton = document.getElementById("downloadFileButton");
+      const fileStatus = document.getElementById("fileStatus");
+      const themeStatus = document.getElementById("themeStatus");
+      const themeButtons = Array.from(document.querySelectorAll("[data-theme-choice]"));
+      const breatheOrb = document.getElementById("breathOrb");
+      const breatheState = document.getElementById("breatheState");
+      const breatheToggle = document.getElementById("breatheToggle");
+      const choiceInput = document.getElementById("choiceInput");
+      const pickChoice = document.getElementById("pickChoice");
+      const choiceResult = document.getElementById("choiceResult");
+      const microResetButton = document.getElementById("microResetButton");
+      const microResetOutput = document.getElementById("microResetOutput");
+      const zenBoard = document.getElementById("zenBoard");
+      const zenTarget = document.getElementById("zenTarget");
+      const zenTime = document.getElementById("zenTime");
+      const zenScore = document.getElementById("zenScore");
+      const zenHigh = document.getElementById("zenHigh");
+      const zenMessage = document.getElementById("zenMessage");
+      const zenStatus = document.getElementById("zenStatus");
+      const zenStart = document.getElementById("zenStart");
+      const zenReset = document.getElementById("zenReset");
+      const gameTabs = Array.from(document.querySelectorAll("[data-game-tab]"));
+      const gamePanes = Array.from(document.querySelectorAll("[data-game-pane]"));
+      const memoryPads = Array.from(document.querySelectorAll("[data-memory-pad]"));
+      const memoryRound = document.getElementById("memoryRound");
+      const memoryScore = document.getElementById("memoryScore");
+      const memoryHigh = document.getElementById("memoryHigh");
+      const memoryStart = document.getElementById("memoryStart");
+      const memoryReset = document.getElementById("memoryReset");
+      const memoryStatus = document.getElementById("memoryStatus");
+      const glowTargetSwatch = document.getElementById("glowTargetSwatch");
+      const glowTargetName = document.getElementById("glowTargetName");
+      const glowScore = document.getElementById("glowScore");
+      const glowHigh = document.getElementById("glowHigh");
+      const glowFlow = document.getElementById("glowFlow");
+      const glowChoices = Array.from(document.querySelectorAll("[data-glow-choice]"));
+      const glowReset = document.getElementById("glowReset");
+      const glowStatus = document.getElementById("glowStatus");
+      const luckCards = Array.from(document.querySelectorAll("[data-luck-card]"));
+      const luckStreak = document.getElementById("luckStreak");
+      const luckBest = document.getElementById("luckBest");
+      const luckMode = document.getElementById("luckMode");
+      const luckReset = document.getElementById("luckReset");
+      const luckStatus = document.getElementById("luckStatus");
+      const sweepCells = Array.from(document.querySelectorAll("[data-sweep-cell]"));
+      const sweepTime = document.getElementById("sweepTime");
+      const sweepScore = document.getElementById("sweepScore");
+      const sweepHigh = document.getElementById("sweepHigh");
+      const sweepStart = document.getElementById("sweepStart");
+      const sweepReset = document.getElementById("sweepReset");
+      const sweepStatus = document.getElementById("sweepStatus");
+      const confirmRedirectLinks = Array.from(document.querySelectorAll("[data-confirm-redirect]"));
+      const sectionLinks = Array.from(document.querySelectorAll("[data-section-link]"));
+
+      const STORAGE_KEYS = {
+        tasks: "stride-ai.tasks",
+        reflection: "stride-ai.reflection",
+        editorName: "stride-ai.editor-name",
+        editorContent: "stride-ai.editor-content",
+        sidebarState: "stride-ai.sidebar-state",
+        theme: "stride.theme",
+        focusMode: "stride.focus-mode",
+        zenHigh: "stride.zen-high",
+        memoryHigh: "stride.memory-high",
+        glowHigh: "stride.glow-high",
+        luckBest: "stride.luck-best",
+        sweepHigh: "stride.sweep-high"
+      };
+
+      const SESSION_LENGTHS = {
+        focus: 25 * 60,
+        break: 5 * 60
+      };
+
+      const sectionIds = ["dashboard", "tasks", "focus", "launch", "reset", "editor", "reflection"];
+      const sectionElements = sectionIds
+        .map(function (id) {
+          return document.getElementById(id);
+        })
+        .filter(Boolean);
+
+      const DEFAULT_FILE_NAME = "working-file.stride";
+      const DEFAULT_FILE_CONTENT = [
+        "Focus for today",
+        "- ",
+        "",
+        "Working notes",
+        "- ",
+        "",
+        "Next move",
+        "- "
+      ].join("\n");
+
+      const THEME_LABELS = {
+        aurora: "Aurora",
+        glacier: "Glacier",
+        pulse: "Pulse",
+        mint: "Mint"
+      };
+
+      const BREATHE_STEPS = [
+        { phase: "inhale", label: "Inhale for four.", duration: 4000 },
+        { phase: "hold", label: "Hold for two.", duration: 2000 },
+        { phase: "exhale", label: "Exhale for six.", duration: 6000 }
+      ];
+
+      const MICRO_RESETS = [
+        "Drop your shoulders, unclench your jaw, and look six feet farther away.",
+        "Stand up and shake out your hands for ten seconds.",
+        "Take one slow breath and name the next smallest useful action.",
+        "Look away from the screen and find three straight lines in the room.",
+        "Sip some water, then come back to only one open loop."
+      ];
+
+      const GLOW_PALETTE = [
+        { name: "Cyan", value: "#5fe0ff" },
+        { name: "Blue", value: "#62a8ff" },
+        { name: "Violet", value: "#8c7dff" },
+        { name: "Mint", value: "#82ffd7" },
+        { name: "Rose", value: "#ff8fc5" },
+        { name: "Amber", value: "#ffd36f" }
+      ];
+
+      let tasks = loadTasks();
+      let taskFilter = "all";
+      let timerMode = "focus";
+      let timeLeft = SESSION_LENGTHS.focus;
+      let timerRunning = false;
+      let timerId = null;
+      let timerNotice = "";
+      let timerNoticeTimeout = null;
+      let breatheRunning = false;
+      let breatheTimeout = null;
+      let currentTheme = "aurora";
+      let activeGame = "zen";
+      let zenRunning = false;
+      let zenScoreValue = 0;
+      let zenTimeLeft = 20;
+      let zenInterval = null;
+      let zenHighScore = 0;
+      let memorySequence = [];
+      let memoryPlayerIndex = 0;
+      let memoryRoundValue = 0;
+      let memoryScoreValue = 0;
+      let memoryHighScore = 0;
+      let memoryLocked = true;
+      let memoryTimeouts = [];
+      let glowScoreValue = 0;
+      let glowHighScore = 0;
+      let glowChoicesCurrent = [];
+      let glowTargetIndex = 0;
+      let glowLocked = false;
+      let glowNextRoundTimeout = null;
+      let luckStreakValue = 0;
+      let luckBestValue = 0;
+      let luckLuckyIndex = 0;
+      let luckLocked = false;
+      let luckNextRoundTimeout = null;
+      let sweepRunning = false;
+      let sweepTimeLeft = 20;
+      let sweepScoreValue = 0;
+      let sweepHighScore = 0;
+      let sweepInterval = null;
+      let sweepLitCells = new Set();
+      let activeSectionId = sectionIds.includes(window.location.hash.slice(1))
+        ? window.location.hash.slice(1)
+        : "dashboard";
+
+      applyBootSequence();
+      initializeWelcome();
+      initializeReflection();
+      initializeEditor();
+      initializeSidebar();
+      initializeFocusMode();
+      initializeTheme();
+      initializeResetTools();
+      initializeArcade();
+      initializeNavigation();
+      initializeHelp();
+      initializeKeyboardShortcuts();
+      updateTaskFilterUI();
+      renderTasks();
+      updateTimerUI();
+
+      taskForm.addEventListener("submit", function (event) {
+        event.preventDefault();
+        addTask(taskInput.value, taskPriority.value);
+      });
+
+      taskFilterButtons.forEach(function (button) {
+        button.addEventListener("click", function () {
+          taskFilter = button.getAttribute("data-task-filter");
+          updateTaskFilterUI();
+          renderTasks();
+        });
+      });
+
+      taskList.addEventListener("change", function (event) {
+        if (!event.target.classList.contains("task-check")) {
+          return;
+        }
+
+        const taskId = event.target.getAttribute("data-task-id");
+        tasks = tasks.map(function (task) {
+          if (task.id === taskId) {
+            return {
+              id: task.id,
+              text: task.text,
+              completed: event.target.checked,
+              priority: task.priority
+            };
+          }
+          return task;
+        });
+        persistTasks();
+        renderTasks();
+      });
+
+      taskList.addEventListener("click", function (event) {
+        const deleteButton = event.target.closest(".delete-task");
+        if (!deleteButton) {
+          return;
+        }
+
+        const taskId = deleteButton.getAttribute("data-task-id");
+        tasks = tasks.filter(function (task) {
+          return task.id !== taskId;
+        });
+        persistTasks();
+        renderTasks();
+      });
+
+      reflectionInput.addEventListener("input", function () {
+        saveStatus.textContent = "Reflection changed. Save when it feels right.";
+      });
+
+      saveReflectionButton.addEventListener("click", saveReflection);
+
+      timerToggle.addEventListener("click", function () {
+        if (timerRunning) {
+          pauseTimer();
+        } else {
+          startTimer();
+        }
+      });
+
+      timerReset.addEventListener("click", function () {
+        pauseTimer();
+        timeLeft = SESSION_LENGTHS[timerMode];
+        timerNotice = timerMode === "focus" ? "Focus block reset." : "Break reset.";
+        clearTimerNoticeLater();
+        timerNoticeTimeout = window.setTimeout(function () {
+          timerNotice = "";
+          updateTimerUI();
+        }, 2200);
+        flashTimerPanel();
+        updateTimerUI();
+      });
+
+      sidebarToggle.addEventListener("click", toggleSidebar);
+      backButton.addEventListener("click", function () {
+        navigateSection(-1);
+      });
+      forwardButton.addEventListener("click", function () {
+        navigateSection(1);
+      });
+      focusModeToggle.addEventListener("click", toggleFocusMode);
+
+      saveFileButton.addEventListener("click", saveEditorFile);
+      downloadFileButton.addEventListener("click", downloadEditorFile);
+      fileNameInput.addEventListener("input", markEditorDirty);
+      fileEditorInput.addEventListener("input", markEditorDirty);
+      breatheToggle.addEventListener("click", toggleBreathing);
+      pickChoice.addEventListener("click", chooseRandomOption);
+      microResetButton.addEventListener("click", giveMicroReset);
+      zenTarget.addEventListener("click", hitZenTarget);
+      zenStart.addEventListener("click", startZenGame);
+      zenReset.addEventListener("click", resetZenGame);
+      memoryStart.addEventListener("click", startMemoryGame);
+      memoryReset.addEventListener("click", resetMemoryGame);
+      memoryPads.forEach(function (pad) {
+        pad.addEventListener("click", function () {
+          handleMemoryPadClick(Number(pad.getAttribute("data-memory-pad")));
+        });
+      });
+      glowChoices.forEach(function (button) {
+        button.addEventListener("click", function () {
+          handleGlowChoice(Number(button.getAttribute("data-glow-choice")));
+        });
+      });
+      glowReset.addEventListener("click", resetGlowGame);
+      luckCards.forEach(function (card) {
+        card.addEventListener("click", function () {
+          handleLuckCardClick(Number(card.getAttribute("data-luck-card")));
+        });
+      });
+      luckReset.addEventListener("click", resetLuckGame);
+      sweepCells.forEach(function (cell) {
+        cell.addEventListener("click", function () {
+          handleSweepCellClick(Number(cell.getAttribute("data-sweep-cell")));
+        });
+      });
+      confirmRedirectLinks.forEach(function (link) {
+        link.addEventListener("click", function (event) {
+          event.preventDefault();
+          const url = link.getAttribute("href");
+          const message = link.getAttribute("data-confirm-redirect") || "Open this site in a new tab?";
+
+          if (window.confirm(message)) {
+            window.open(url, "_blank", "noopener,noreferrer");
+          }
+        });
+      });
+      sweepStart.addEventListener("click", startSweepGame);
+      sweepReset.addEventListener("click", resetSweepGame);
+      sidebarScrim.addEventListener("click", closeSidebar);
+      window.addEventListener("resize", syncSidebarForViewport);
+
+      function applyBootSequence() {
+        window.setTimeout(function () {
+          body.classList.add("boot-visible");
+        }, bootSteps.visible);
+
+        window.setTimeout(function () {
+          body.classList.add("boot-rotate");
+        }, bootSteps.rotate);
+
+        window.setTimeout(function () {
+          body.classList.add("boot-dock");
+        }, bootSteps.dock);
+
+        window.setTimeout(function () {
+          body.classList.add("app-ready");
+        }, bootSteps.ready);
+      }
+
+      function initializeWelcome() {
+        const now = new Date();
+        const hour = now.getHours();
+        const greeting = hour < 12 ? "Good morning." : hour < 18 ? "Good afternoon." : "Good evening.";
+        const dateText = now.toLocaleDateString(undefined, {
+          weekday: "long",
+          month: "long",
+          day: "numeric"
+        });
+
+        welcomeHeading.textContent = greeting + " Make a steady move forward.";
+        todayLabel.textContent = dateText;
+      }
+
+      function initializeReflection() {
+        const savedReflection = loadString(STORAGE_KEYS.reflection);
+        if (savedReflection) {
+          reflectionInput.value = savedReflection;
+          saveStatus.textContent = "Reflection restored from your last session.";
+        }
+      }
+
+      function initializeEditor() {
+        const savedName = normalizeFileName(loadString(STORAGE_KEYS.editorName) || DEFAULT_FILE_NAME);
+        const savedContent = loadString(STORAGE_KEYS.editorContent) || DEFAULT_FILE_CONTENT;
+        fileNameInput.value = savedName;
+        fileEditorInput.value = savedContent;
+        updateFileTabLabel();
+        fileStatus.textContent = "Workspace file ready.";
+      }
+
+      function initializeSidebar() {
+        const savedState = loadString(STORAGE_KEYS.sidebarState);
+        if (savedState === "collapsed" && !isCompactViewport()) {
+          body.classList.add("sidebar-collapsed");
+        }
+        syncSidebarForViewport();
+      }
+
+      function initializeFocusMode() {
+        const savedFocusMode = loadString(STORAGE_KEYS.focusMode) === "on";
+        body.classList.toggle("focus-mode", savedFocusMode);
+        focusModeToggle.textContent = savedFocusMode ? "Exit focus" : "Focus mode";
+
+        if (savedFocusMode && !isSectionVisible(activeSectionId)) {
+          activeSectionId = "tasks";
+        }
+      }
+
+      function initializeTheme() {
+        const savedTheme = loadString(STORAGE_KEYS.theme);
+        applyTheme(THEME_LABELS[savedTheme] ? savedTheme : "aurora");
+
+        themeButtons.forEach(function (button) {
+          button.addEventListener("click", function () {
+            applyTheme(button.getAttribute("data-theme-choice"));
+          });
+        });
+      }
+
+      function initializeResetTools() {
+        breatheOrb.setAttribute("data-phase", "exhale");
+        choiceResult.textContent = "Need a nudge? Enter a few options and let it pick one.";
+        microResetOutput.textContent = "Try a 10 second reset between tasks.";
+      }
+
+      function initializeArcade() {
+        initializeGameTabs();
+        initializeZenGame();
+        initializeMemoryGame();
+        initializeGlowGame();
+        initializeLuckGame();
+        initializeSweepGame();
+        switchGame(activeGame);
+      }
+
+      function initializeGameTabs() {
+        gameTabs.forEach(function (button) {
+          button.addEventListener("click", function () {
+            switchGame(button.getAttribute("data-game-tab"));
+          });
+        });
+      }
+
+      function switchGame(gameName) {
+        activeGame = gameName;
+
+        gameTabs.forEach(function (button) {
+          button.classList.toggle("is-active", button.getAttribute("data-game-tab") === gameName);
+        });
+
+        gamePanes.forEach(function (pane) {
+          pane.hidden = pane.getAttribute("data-game-pane") !== gameName;
+        });
+      }
+
+      function initializeZenGame() {
+        zenHighScore = Number(loadString(STORAGE_KEYS.zenHigh) || "0");
+        zenTarget.hidden = true;
+        zenReset.disabled = true;
+        updateZenUI();
+      }
+
+      function initializeMemoryGame() {
+        memoryHighScore = Number(loadString(STORAGE_KEYS.memoryHigh) || "0");
+        resetMemoryGame();
+      }
+
+      function initializeGlowGame() {
+        glowHighScore = Number(loadString(STORAGE_KEYS.glowHigh) || "0");
+        glowScoreValue = 0;
+        setupGlowRound();
+        updateGlowUI();
+      }
+
+      function initializeLuckGame() {
+        luckBestValue = Number(loadString(STORAGE_KEYS.luckBest) || "0");
+        resetLuckGame();
+      }
+
+      function initializeSweepGame() {
+        sweepHighScore = Number(loadString(STORAGE_KEYS.sweepHigh) || "0");
+        resetSweepGame();
+      }
+
+      function initializeNavigation() {
+        sectionLinks.forEach(function (link) {
+          link.addEventListener("click", function (event) {
+            event.preventDefault();
+            const targetId = link.getAttribute("data-section-link");
+            scrollToSection(targetId);
+          });
+        });
+
+        const observer = new IntersectionObserver(
+          function (entries) {
+            const visibleEntries = entries
+              .filter(function (entry) {
+                return entry.isIntersecting;
+              })
+              .sort(function (entryA, entryB) {
+                return entryB.intersectionRatio - entryA.intersectionRatio;
+              });
+
+            if (visibleEntries.length) {
+              activeSectionId = visibleEntries[0].target.id;
+              updateSectionState();
+            }
+          },
+          {
+            rootMargin: "-18% 0px -55% 0px",
+            threshold: [0.15, 0.35, 0.6]
+          }
+        );
+
+        sectionElements.forEach(function (section) {
+          observer.observe(section);
+        });
+
+        updateSectionState();
+      }
+
+      function initializeHelp() {
+        helpToggle.addEventListener("click", openHelp);
+        sidebarHelp.addEventListener("click", openHelp);
+        helpClose.addEventListener("click", closeHelp);
+        helpBackdrop.addEventListener("click", function (event) {
+          if (event.target === helpBackdrop) {
+            closeHelp();
+          }
+        });
+      }
+
+      function initializeKeyboardShortcuts() {
+        document.addEventListener("keydown", function (event) {
+          if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "s") {
+            if (document.activeElement === reflectionInput) {
+              event.preventDefault();
+              saveReflection();
+            }
+
+            if (document.activeElement === fileEditorInput || document.activeElement === fileNameInput) {
+              event.preventDefault();
+              saveEditorFile();
+            }
+          }
+
+          if (event.key === "Escape") {
+            closeHelp();
+            closeSidebar();
+          }
+        });
+      }
+
+      function applyTheme(theme) {
+        currentTheme = THEME_LABELS[theme] ? theme : "aurora";
+        body.setAttribute("data-theme", currentTheme);
+        saveString(STORAGE_KEYS.theme, currentTheme);
+        themeStatus.textContent = THEME_LABELS[currentTheme] + " is active.";
+
+        themeButtons.forEach(function (button) {
+          button.classList.toggle("is-active", button.getAttribute("data-theme-choice") === currentTheme);
+        });
+      }
+
+      function isCompactViewport() {
+        return window.innerWidth <= 980;
+      }
+
+      function getVisibleSectionIds() {
+        return body.classList.contains("focus-mode")
+          ? ["dashboard", "tasks", "focus", "reflection"]
+          : sectionIds;
+      }
+
+      function isSectionVisible(sectionId) {
+        return getVisibleSectionIds().indexOf(sectionId) !== -1;
+      }
+
+      function openHelp() {
+        closeSidebar();
+        helpBackdrop.hidden = false;
+        body.classList.add("modal-open");
+      }
+
+      function closeHelp() {
+        if (helpBackdrop.hidden) {
+          return;
+        }
+        helpBackdrop.hidden = true;
+        body.classList.remove("modal-open");
+      }
+
+      function toggleSidebar() {
+        if (isCompactViewport()) {
+          const shouldOpen = !body.classList.contains("sidebar-open");
+          body.classList.toggle("sidebar-open", shouldOpen);
+          sidebarScrim.hidden = !shouldOpen;
+          return;
+        }
+
+        body.classList.toggle("sidebar-collapsed");
+        saveString(STORAGE_KEYS.sidebarState, body.classList.contains("sidebar-collapsed") ? "collapsed" : "expanded");
+      }
+
+      function closeSidebar() {
+        body.classList.remove("sidebar-open");
+        sidebarScrim.hidden = true;
+      }
+
+      function syncSidebarForViewport() {
+        if (isCompactViewport()) {
+          body.classList.remove("sidebar-collapsed");
+          closeSidebar();
+          return;
+        }
+
+        closeSidebar();
+        const savedState = loadString(STORAGE_KEYS.sidebarState);
+        body.classList.toggle("sidebar-collapsed", savedState === "collapsed");
+      }
+
+      function navigateSection(offset) {
+        const visibleSectionIds = getVisibleSectionIds();
+        const currentIndex = visibleSectionIds.indexOf(activeSectionId);
+        if (currentIndex === -1) {
+          return;
+        }
+
+        const nextIndex = Math.max(0, Math.min(visibleSectionIds.length - 1, currentIndex + offset));
+        scrollToSection(visibleSectionIds[nextIndex]);
+      }
+
+      function scrollToSection(sectionId) {
+        if (!isSectionVisible(sectionId)) {
+          sectionId = "tasks";
+        }
+
+        const target = document.getElementById(sectionId);
+        if (!target) {
+          return;
+        }
+
+        activeSectionId = sectionId;
+        updateSectionState();
+        target.scrollIntoView({
+          behavior: prefersReducedMotion ? "auto" : "smooth",
+          block: "start"
+        });
+
+        if (window.history && window.history.replaceState) {
+          window.history.replaceState(null, "", "#" + sectionId);
+        }
+
+        closeSidebar();
+      }
+
+      function updateSectionState() {
+        const visibleSectionIds = getVisibleSectionIds();
+        const currentIndex = visibleSectionIds.indexOf(activeSectionId);
+        backButton.disabled = currentIndex <= 0;
+        forwardButton.disabled = currentIndex === -1 || currentIndex >= visibleSectionIds.length - 1;
+
+        sectionLinks.forEach(function (link) {
+          link.classList.toggle("is-active", link.getAttribute("data-section-link") === activeSectionId);
+        });
+      }
+
+      function toggleFocusMode() {
+        const enabling = !body.classList.contains("focus-mode");
+        body.classList.toggle("focus-mode", enabling);
+        saveString(STORAGE_KEYS.focusMode, enabling ? "on" : "off");
+        focusModeToggle.textContent = enabling ? "Exit focus" : "Focus mode";
+
+        if (enabling) {
+          scrollToSection("tasks");
+        } else {
+          updateSectionState();
+        }
+      }
+
+      function normalizePriority(priority) {
+        return ["high", "medium", "low"].indexOf(priority) !== -1 ? priority : "medium";
+      }
+
+      function getPriorityRank(priority) {
+        if (priority === "high") {
+          return 0;
+        }
+        if (priority === "medium") {
+          return 1;
+        }
+        return 2;
+      }
+
+      function formatPriority(priority) {
+        const safePriority = normalizePriority(priority);
+        return safePriority.charAt(0).toUpperCase() + safePriority.slice(1);
+      }
+
+      function getSortedActiveTasks() {
+        return tasks
+          .filter(function (task) {
+            return !task.completed;
+          })
+          .slice()
+          .sort(function (left, right) {
+            return getPriorityRank(left.priority) - getPriorityRank(right.priority);
+          });
+      }
+
+      function getVisibleTasks() {
+        return tasks.filter(function (task) {
+          if (taskFilter === "active") {
+            return !task.completed;
+          }
+          if (taskFilter === "completed") {
+            return task.completed;
+          }
+          return true;
+        });
+      }
+
+      function updateTaskFilterUI() {
+        taskFilterButtons.forEach(function (button) {
+          button.classList.toggle("is-active", button.getAttribute("data-task-filter") === taskFilter);
+        });
+      }
+
+      function loadTasks() {
+        try {
+          const rawValue = localStorage.getItem(STORAGE_KEYS.tasks);
+          const parsed = rawValue ? JSON.parse(rawValue) : [];
+          if (!Array.isArray(parsed)) {
+            return [];
+          }
+          return parsed
+            .filter(function (task) {
+              return task && typeof task.id === "string" && typeof task.text === "string";
+            })
+            .map(function (task) {
+              return {
+                id: task.id,
+                text: task.text.trim(),
+                completed: Boolean(task.completed),
+                priority: normalizePriority(task.priority)
+              };
+            })
+            .filter(function (task) {
+              return task.text.length > 0;
+            });
+        } catch (error) {
+          return [];
+        }
+      }
+
+      function persistTasks() {
+        try {
+          localStorage.setItem(STORAGE_KEYS.tasks, JSON.stringify(tasks));
+        } catch (error) {
+          // Ignore storage issues and keep the in-memory experience usable.
+        }
+      }
+
+      function loadString(key) {
+        try {
+          return localStorage.getItem(key) || "";
+        } catch (error) {
+          return "";
+        }
+      }
+
+      function saveString(key, value) {
+        try {
+          localStorage.setItem(key, value);
+        } catch (error) {
+          // Ignore storage issues and keep the in-memory experience usable.
+        }
+      }
+
+      function addTask(rawText, rawPriority) {
+        const text = rawText.trim().replace(/\s+/g, " ");
+        if (!text) {
+          taskInput.focus();
+          return;
+        }
+
+        tasks.unshift({
+          id: createTaskId(),
+          text: text,
+          completed: false,
+          priority: normalizePriority(rawPriority)
+        });
+
+        taskInput.value = "";
+        taskPriority.value = "medium";
+        persistTasks();
+        renderTasks();
+        taskInput.focus();
+      }
+
+      function createTaskId() {
+        return "task-" + Date.now().toString(36) + "-" + Math.random().toString(36).slice(2, 7);
+      }
+
+      function renderTasks() {
+        taskList.innerHTML = "";
+        const visibleTasks = getVisibleTasks();
+
+        visibleTasks.forEach(function (task) {
+          const item = document.createElement("li");
+          item.className = "task-item" + (task.completed ? " is-complete" : "");
+
+          const checkbox = document.createElement("input");
+          checkbox.className = "task-check";
+          checkbox.type = "checkbox";
+          checkbox.checked = task.completed;
+          checkbox.setAttribute("data-task-id", task.id);
+          checkbox.setAttribute("aria-label", task.completed ? "Mark task incomplete" : "Mark task complete");
+
+          const content = document.createElement("div");
+          content.className = "task-content";
+
+          const text = document.createElement("div");
+          text.className = "task-text";
+          text.textContent = task.text;
+
+          const meta = document.createElement("div");
+          meta.className = "task-item-meta";
+          meta.textContent = formatPriority(task.priority) + " priority";
+
+          content.appendChild(text);
+          content.appendChild(meta);
+
+          const priority = document.createElement("div");
+          priority.className = "priority-pill";
+          priority.setAttribute("data-priority", task.priority);
+          priority.textContent = formatPriority(task.priority);
+
+          const deleteButton = document.createElement("button");
+          deleteButton.className = "delete-task";
+          deleteButton.type = "button";
+          deleteButton.setAttribute("data-task-id", task.id);
+          deleteButton.setAttribute("aria-label", "Delete task");
+          deleteButton.innerHTML = [
+            '<svg class="button-icon" viewBox="0 0 24 24" aria-hidden="true">',
+            '<path d="M3 6h18"></path>',
+            '<path d="M8 6V4h8v2"></path>',
+            '<path d="M19 6l-1 14H6L5 6"></path>',
+            '<path d="M10 11v6"></path>',
+            '<path d="M14 11v6"></path>',
+            "</svg>"
+          ].join("");
+
+          item.appendChild(checkbox);
+          item.appendChild(content);
+          item.appendChild(priority);
+          item.appendChild(deleteButton);
+          taskList.appendChild(item);
+        });
+
+        emptyState.hidden = visibleTasks.length > 0;
+        if (!visibleTasks.length && tasks.length) {
+          emptyState.textContent = taskFilter === "completed"
+            ? "No completed tasks in view yet."
+            : "No active tasks in view right now.";
+        } else {
+          emptyState.textContent = "Your list is clear. Add the next step you want to move.";
+        }
+
+        updateDashboard();
+      }
+
+      function updateDashboard() {
+        const total = tasks.length;
+        const completed = tasks.filter(function (task) {
+          return task.completed;
+        }).length;
+        const active = total - completed;
+        const percent = total ? Math.round((completed / total) * 100) : 0;
+        const currentTask = getSortedActiveTasks()[0];
+
+        progressValue.textContent = percent + "%";
+        progressFill.style.width = percent + "%";
+        progressDetail.textContent = total
+          ? completed + " of " + total + " tasks completed today."
+          : "Add a task to start building momentum.";
+
+        taskCounter.textContent = active + " active";
+        taskMeta.textContent = total
+          ? active + " still in motion, " + completed + " already finished."
+          : "No tasks yet. Give yourself a clear place to begin.";
+
+        renderTopThree();
+
+        sidebarRemaining.textContent = String(active);
+        sidebarCompleted.textContent = String(completed);
+
+        if (currentTask) {
+          currentTaskTitle.textContent = currentTask.text;
+          currentTaskHint.textContent = formatPriority(currentTask.priority) + " priority. Keep it small enough to start immediately.";
+        } else if (total > 0) {
+          currentTaskTitle.textContent = "List complete";
+          currentTaskHint.textContent = "You cleared the board. Decide what deserves the next block.";
+        } else {
+          currentTaskTitle.textContent = "No task selected";
+          currentTaskHint.textContent = "Choose the next step you want to move.";
+        }
+      }
+
+      function renderTopThree() {
+        const topTasks = getSortedActiveTasks().slice(0, 3);
+        topThreeList.innerHTML = "";
+
+        if (!topTasks.length) {
+          const emptyItem = document.createElement("div");
+          emptyItem.className = "top-three-item";
+          emptyItem.innerHTML = '<div class="top-three-rank">-</div><div><div class="top-three-title">Nothing urgent is waiting.</div><div class="top-three-meta">Add tasks and assign a priority to shape today.</div></div><div class="priority-pill" data-priority="low">Clear</div>';
+          topThreeList.appendChild(emptyItem);
+          return;
+        }
+
+        topTasks.forEach(function (task, index) {
+          const item = document.createElement("div");
+          item.className = "top-three-item";
+          item.innerHTML =
+            '<div class="top-three-rank">' + (index + 1) + "</div>" +
+            '<div><div class="top-three-title">' + escapeHtml(task.text) + '</div><div class="top-three-meta">' + formatPriority(task.priority) + ' priority</div></div>' +
+            '<div class="priority-pill" data-priority="' + task.priority + '">' + formatPriority(task.priority) + "</div>";
+          topThreeList.appendChild(item);
+        });
+      }
+
+      function escapeHtml(value) {
+        return value
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/\"/g, "&quot;")
+          .replace(/'/g, "&#39;");
+      }
+
+      function saveReflection() {
+        saveString(STORAGE_KEYS.reflection, reflectionInput.value.trim());
+        saveStatus.textContent = "Saved at " + formatTime(new Date()) + ".";
+      }
+
+      function toggleBreathing() {
+        if (breatheRunning) {
+          stopBreathing("Paused. Start again whenever you want.");
+          return;
+        }
+
+        breatheRunning = true;
+        breatheToggle.textContent = "Pause breathing";
+        runBreatheStep(0);
+      }
+
+      function runBreatheStep(stepIndex) {
+        const step = BREATHE_STEPS[stepIndex];
+        breatheOrb.setAttribute("data-phase", step.phase);
+        breatheState.textContent = step.label;
+        window.clearTimeout(breatheTimeout);
+        breatheTimeout = window.setTimeout(function () {
+          runBreatheStep((stepIndex + 1) % BREATHE_STEPS.length);
+        }, step.duration);
+      }
+
+      function stopBreathing(message) {
+        breatheRunning = false;
+        window.clearTimeout(breatheTimeout);
+        breatheTimeout = null;
+        breatheOrb.setAttribute("data-phase", "exhale");
+        breatheState.textContent = message;
+        breatheToggle.textContent = "Start breathing";
+      }
+
+      function chooseRandomOption() {
+        const options = choiceInput.value
+          .split(",")
+          .map(function (option) {
+            return option.trim();
+          })
+          .filter(Boolean);
+
+        if (!options.length) {
+          choiceResult.textContent = "Add a few options first, separated by commas.";
+          choiceInput.focus();
+          return;
+        }
+
+        const picked = options[Math.floor(Math.random() * options.length)];
+        choiceResult.textContent = "Go with: " + picked;
+      }
+
+      function giveMicroReset() {
+        const prompt = MICRO_RESETS[Math.floor(Math.random() * MICRO_RESETS.length)];
+        microResetOutput.textContent = prompt;
+      }
+
+      function startMemoryGame() {
+        clearMemoryTimeouts();
+        memorySequence = [];
+        memoryPlayerIndex = 0;
+        memoryRoundValue = 0;
+        memoryScoreValue = 0;
+        memoryLocked = true;
+        memoryStatus.textContent = "Watch the sequence.";
+        memoryStart.textContent = "Restart";
+        nextMemoryRound();
+      }
+
+      function nextMemoryRound() {
+        memoryRoundValue += 1;
+        memorySequence.push(Math.floor(Math.random() * memoryPads.length));
+        memoryPlayerIndex = 0;
+        memoryLocked = true;
+        updateMemoryUI();
+        playMemorySequence(0);
+      }
+
+      function playMemorySequence(stepIndex) {
+        if (stepIndex >= memorySequence.length) {
+          memoryLocked = false;
+          memoryStatus.textContent = "Your turn.";
+          return;
+        }
+
+        const padIndex = memorySequence[stepIndex];
+        const pad = memoryPads[padIndex];
+
+        queueMemoryTimeout(function () {
+          flashMemoryPad(pad);
+        }, 220);
+
+        queueMemoryTimeout(function () {
+          playMemorySequence(stepIndex + 1);
+        }, 760);
+      }
+
+      function handleMemoryPadClick(padIndex) {
+        if (memoryLocked || !memorySequence.length) {
+          return;
+        }
+
+        flashMemoryPad(memoryPads[padIndex]);
+
+        if (memorySequence[memoryPlayerIndex] !== padIndex) {
+          memoryLocked = true;
+          memoryStatus.textContent = "Close. You made it to round " + memoryRoundValue + ".";
+          updateMemoryHigh(memoryScoreValue);
+          return;
+        }
+
+        memoryPlayerIndex += 1;
+
+        if (memoryPlayerIndex >= memorySequence.length) {
+          memoryScoreValue = memoryRoundValue;
+          updateMemoryHigh(memoryScoreValue);
+          memoryLocked = true;
+          memoryStatus.textContent = "Nice. Next round...";
+          updateMemoryUI();
+          queueMemoryTimeout(function () {
+            nextMemoryRound();
+          }, 700);
+        }
+      }
+
+      function resetMemoryGame() {
+        clearMemoryTimeouts();
+        memorySequence = [];
+        memoryPlayerIndex = 0;
+        memoryRoundValue = 0;
+        memoryScoreValue = 0;
+        memoryLocked = true;
+        memoryStart.textContent = "Start round";
+        memoryStatus.textContent = "Watch the sequence, then repeat it.";
+        memoryPads.forEach(function (pad) {
+          pad.classList.remove("is-lit");
+        });
+        updateMemoryUI();
+      }
+
+      function updateMemoryHigh(score) {
+        if (score > memoryHighScore) {
+          memoryHighScore = score;
+          saveString(STORAGE_KEYS.memoryHigh, String(memoryHighScore));
+          updateMemoryUI();
+        }
+      }
+
+      function updateMemoryUI() {
+        memoryRound.textContent = String(memoryRoundValue);
+        memoryScore.textContent = String(memoryScoreValue);
+        memoryHigh.textContent = String(memoryHighScore);
+      }
+
+      function queueMemoryTimeout(callback, delay) {
+        const timeoutId = window.setTimeout(callback, delay);
+        memoryTimeouts.push(timeoutId);
+      }
+
+      function clearMemoryTimeouts() {
+        memoryTimeouts.forEach(function (timeoutId) {
+          window.clearTimeout(timeoutId);
+        });
+        memoryTimeouts = [];
+      }
+
+      function flashMemoryPad(pad) {
+        pad.classList.add("is-lit");
+        window.setTimeout(function () {
+          pad.classList.remove("is-lit");
+        }, 260);
+      }
+
+      function setupGlowRound() {
+        glowLocked = false;
+        const shuffled = GLOW_PALETTE
+          .slice()
+          .sort(function () {
+            return Math.random() - 0.5;
+          });
+
+        glowChoicesCurrent = shuffled.slice(0, 3);
+        glowTargetIndex = Math.floor(Math.random() * glowChoicesCurrent.length);
+
+        glowChoices.forEach(function (button, index) {
+          const choice = glowChoicesCurrent[index];
+          button.innerHTML = '<span class="glow-choice-swatch" style="background:' + choice.value + '"></span><span>' + choice.name + "</span>";
+        });
+
+        glowTargetSwatch.style.background = glowChoicesCurrent[glowTargetIndex].value;
+        glowTargetName.textContent = glowChoicesCurrent[glowTargetIndex].name;
+        glowFlow.textContent = "Live";
+      }
+
+      function handleGlowChoice(choiceIndex) {
+        if (glowLocked) {
+          return;
+        }
+
+        glowLocked = true;
+        const isCorrect = choiceIndex === glowTargetIndex;
+        if (isCorrect) {
+          glowScoreValue += 1;
+          glowStatus.textContent = "Clean match.";
+          glowFlow.textContent = "Hit";
+        } else {
+          glowScoreValue = Math.max(0, glowScoreValue - 1);
+          glowStatus.textContent = "Not quite. New shade.";
+          glowFlow.textContent = "Shift";
+        }
+
+        if (glowScoreValue > glowHighScore) {
+          glowHighScore = glowScoreValue;
+          saveString(STORAGE_KEYS.glowHigh, String(glowHighScore));
+        }
+
+        updateGlowUI();
+        window.clearTimeout(glowNextRoundTimeout);
+        glowNextRoundTimeout = window.setTimeout(function () {
+          setupGlowRound();
+        }, 380);
+      }
+
+      function resetGlowGame() {
+        glowLocked = false;
+        glowScoreValue = 0;
+        glowStatus.textContent = "Pick the swatch that matches the target.";
+        window.clearTimeout(glowNextRoundTimeout);
+        setupGlowRound();
+        updateGlowUI();
+      }
+
+      function updateGlowUI() {
+        glowScore.textContent = String(glowScoreValue);
+        glowHigh.textContent = String(glowHighScore);
+      }
+
+      function prepareLuckRound(message) {
+        window.clearTimeout(luckNextRoundTimeout);
+        luckLuckyIndex = Math.floor(Math.random() * luckCards.length);
+        luckLocked = false;
+
+        luckCards.forEach(function (card, index) {
+          card.classList.remove("is-hit", "is-miss");
+          card.textContent = "Orb " + (index + 1);
+        });
+
+        luckMode.textContent = "Pick";
+        luckStatus.textContent = message;
+        updateLuckUI();
+      }
+
+      function handleLuckCardClick(cardIndex) {
+        if (luckLocked) {
+          return;
+        }
+
+        luckLocked = true;
+        const foundGlow = cardIndex === luckLuckyIndex;
+
+        luckCards.forEach(function (card, index) {
+          if (index === luckLuckyIndex) {
+            card.classList.add("is-hit");
+            card.textContent = "Glow";
+          } else {
+            card.classList.add("is-miss");
+            card.textContent = "Drift";
+          }
+        });
+
+        if (foundGlow) {
+          luckStreakValue += 1;
+          luckStatus.textContent = "Found it. Keep the streak going.";
+          luckMode.textContent = "Hit";
+        } else {
+          luckStreakValue = 0;
+          luckStatus.textContent = "Missed. The glow was hiding in orb " + (luckLuckyIndex + 1) + ".";
+          luckMode.textContent = "Miss";
+        }
+
+        if (luckStreakValue > luckBestValue) {
+          luckBestValue = luckStreakValue;
+          saveString(STORAGE_KEYS.luckBest, String(luckBestValue));
+        }
+
+        updateLuckUI();
+        luckNextRoundTimeout = window.setTimeout(function () {
+          prepareLuckRound("Next round. Pick a card and trust the first impulse.");
+        }, 950);
+      }
+
+      function resetLuckGame() {
+        luckStreakValue = 0;
+        prepareLuckRound("Pick a card and see if you find the glow.");
+        updateLuckUI();
+      }
+
+      function updateLuckUI() {
+        luckStreak.textContent = String(luckStreakValue);
+        luckBest.textContent = String(luckBestValue);
+      }
+
+      function startSweepGame() {
+        if (sweepRunning) {
+          return;
+        }
+
+        sweepRunning = true;
+        sweepTimeLeft = 20;
+        sweepScoreValue = 0;
+        sweepStart.disabled = true;
+        sweepStart.textContent = "Running";
+        sweepReset.disabled = false;
+        sweepStatus.textContent = "Clear the lit tiles as fast as you can.";
+        spawnSweepPattern();
+        updateSweepUI();
+
+        sweepInterval = window.setInterval(function () {
+          sweepTimeLeft -= 1;
+          updateSweepUI();
+
+          if (sweepTimeLeft <= 0) {
+            finishSweepGame();
+          }
+        }, 1000);
+      }
+
+      function handleSweepCellClick(cellIndex) {
+        if (!sweepRunning) {
+          return;
+        }
+
+        if (!sweepLitCells.has(cellIndex)) {
+          sweepStatus.textContent = "Only clear the glowing tiles.";
+          return;
+        }
+
+        sweepLitCells.delete(cellIndex);
+        sweepScoreValue += 1;
+        renderSweepPattern();
+        updateSweepUI();
+
+        if (!sweepLitCells.size) {
+          spawnSweepPattern();
+        }
+      }
+
+      function spawnSweepPattern() {
+        sweepLitCells = new Set();
+
+        while (sweepLitCells.size < 3) {
+          sweepLitCells.add(Math.floor(Math.random() * sweepCells.length));
+        }
+
+        renderSweepPattern();
+      }
+
+      function renderSweepPattern() {
+        sweepCells.forEach(function (cell, index) {
+          cell.classList.toggle("is-lit", sweepLitCells.has(index));
+        });
+      }
+
+      function finishSweepGame() {
+        sweepRunning = false;
+        window.clearInterval(sweepInterval);
+        sweepInterval = null;
+        sweepStart.disabled = false;
+        sweepStart.textContent = "Play again";
+        sweepLitCells.clear();
+        renderSweepPattern();
+
+        if (sweepScoreValue > sweepHighScore) {
+          sweepHighScore = sweepScoreValue;
+          saveString(STORAGE_KEYS.sweepHigh, String(sweepHighScore));
+          sweepStatus.textContent = "New best: " + sweepScoreValue + ".";
+        } else {
+          sweepStatus.textContent = "Round complete. You cleared " + sweepScoreValue + " tiles.";
+        }
+
+        updateSweepUI();
+      }
+
+      function resetSweepGame() {
+        sweepRunning = false;
+        window.clearInterval(sweepInterval);
+        sweepInterval = null;
+        sweepTimeLeft = 20;
+        sweepScoreValue = 0;
+        sweepStart.disabled = false;
+        sweepStart.textContent = "Start round";
+        sweepReset.disabled = true;
+        sweepLitCells.clear();
+        renderSweepPattern();
+        sweepStatus.textContent = "Start a 20 second clearing round.";
+        updateSweepUI();
+      }
+
+      function updateSweepUI() {
+        sweepTime.textContent = sweepTimeLeft + "s";
+        sweepScore.textContent = String(sweepScoreValue);
+        sweepHigh.textContent = String(sweepHighScore);
+      }
+
+      function markEditorDirty() {
+        updateFileTabLabel();
+        fileStatus.textContent = "Draft changed. Save when you want to lock it in.";
+      }
+
+      function normalizeFileName(rawName) {
+        const cleaned = rawName.trim().replace(/[\\/:*?"<>|]+/g, "-");
+        return cleaned || DEFAULT_FILE_NAME;
+      }
+
+      function updateFileTabLabel() {
+        fileTabLabel.textContent = normalizeFileName(fileNameInput.value || DEFAULT_FILE_NAME);
+      }
+
+      function saveEditorFile() {
+        const normalizedName = normalizeFileName(fileNameInput.value || DEFAULT_FILE_NAME);
+        fileNameInput.value = normalizedName;
+        updateFileTabLabel();
+        saveString(STORAGE_KEYS.editorName, normalizedName);
+        saveString(STORAGE_KEYS.editorContent, fileEditorInput.value);
+        fileStatus.textContent = "Saved at " + formatTime(new Date()) + ".";
+      }
+
+      function downloadEditorFile() {
+        const normalizedName = normalizeFileName(fileNameInput.value || DEFAULT_FILE_NAME);
+        const downloadName = /\.txt$/i.test(normalizedName) ? normalizedName : normalizedName + ".txt";
+        const blob = new Blob([fileEditorInput.value], { type: "text/plain;charset=utf-8" });
+        const blobUrl = URL.createObjectURL(blob);
+        const downloadLink = document.createElement("a");
+        downloadLink.href = blobUrl;
+        downloadLink.download = downloadName;
+        document.body.appendChild(downloadLink);
+        downloadLink.click();
+        document.body.removeChild(downloadLink);
+        URL.revokeObjectURL(blobUrl);
+        fileStatus.textContent = "Downloaded " + downloadName + ".";
+      }
+
+      function formatTime(date) {
+        return date.toLocaleTimeString([], {
+          hour: "numeric",
+          minute: "2-digit"
+        });
+      }
+
+      function updateTimerUI() {
+        const minutes = Math.floor(timeLeft / 60).toString().padStart(2, "0");
+        const seconds = (timeLeft % 60).toString().padStart(2, "0");
+        const defaultNotice = timerMode === "focus"
+          ? "One thing at a time. Let the rest wait for a little while."
+          : "Take five to reset your attention before the next block.";
+
+        timerLabel.textContent = timerMode === "focus" ? "Focus session" : "Break window";
+        timerDisplay.textContent = minutes + ":" + seconds;
+        timerStatus.textContent = timerNotice || defaultNotice;
+        timerToggle.textContent = timerRunning
+          ? "Pause"
+          : (timerMode === "focus" && timeLeft === SESSION_LENGTHS.focus ? "Start focus" : "Resume");
+
+        focusPill.classList.toggle("is-active", timerMode === "focus");
+        breakPill.classList.toggle("is-active", timerMode === "break");
+        sidebarSessionState.textContent = timerRunning
+          ? (timerMode === "focus" ? "Focus" : "Break")
+          : (timerMode === "focus" ? "Ready" : "Break");
+      }
+
+      function startZenGame() {
+        if (zenRunning) {
+          return;
+        }
+
+        zenRunning = true;
+        zenScoreValue = 0;
+        zenTimeLeft = 20;
+        zenTarget.hidden = false;
+        zenMessage.textContent = "";
+        zenStatus.textContent = "Tap the glow before it slips away.";
+        zenStart.textContent = "Game running";
+        zenStart.disabled = true;
+        zenReset.disabled = false;
+        moveZenTarget();
+        updateZenUI();
+
+        zenInterval = window.setInterval(function () {
+          zenTimeLeft -= 1;
+          updateZenUI();
+
+          if (zenTimeLeft <= 0) {
+            finishZenGame();
+          }
+        }, 1000);
+      }
+
+      function hitZenTarget() {
+        if (!zenRunning) {
+          return;
+        }
+
+        zenScoreValue += 1;
+        zenStatus.textContent = "Nice. Keep going.";
+        moveZenTarget();
+        updateZenUI();
+      }
+
+      function finishZenGame() {
+        zenRunning = false;
+        window.clearInterval(zenInterval);
+        zenInterval = null;
+        zenTarget.hidden = true;
+        zenStart.disabled = false;
+        zenStart.textContent = "Play again";
+
+        if (zenScoreValue > zenHighScore) {
+          zenHighScore = zenScoreValue;
+          saveString(STORAGE_KEYS.zenHigh, String(zenHighScore));
+          zenStatus.textContent = "New high score: " + zenScoreValue + ".";
+          zenMessage.textContent = "That one landed. Try to beat it.";
+        } else {
+          zenStatus.textContent = "Time. You landed " + zenScoreValue + " taps.";
+          zenMessage.textContent = "A quick reset is still a reset.";
+        }
+
+        updateZenUI();
+      }
+
+      function resetZenGame() {
+        zenRunning = false;
+        window.clearInterval(zenInterval);
+        zenInterval = null;
+        zenScoreValue = 0;
+        zenTimeLeft = 20;
+        zenTarget.hidden = true;
+        zenStart.disabled = false;
+        zenStart.textContent = "Start game";
+        zenReset.disabled = true;
+        zenStatus.textContent = "A quick game can be enough to break a stress loop.";
+        zenMessage.textContent = "Press start, then tap the glow before it slips away.";
+        updateZenUI();
+      }
+
+      function moveZenTarget() {
+        const boardRect = zenBoard.getBoundingClientRect();
+        const targetSize = 54;
+        const maxX = Math.max(0, boardRect.width - targetSize - 24);
+        const maxY = Math.max(0, boardRect.height - targetSize - 24);
+        const x = 12 + Math.random() * maxX;
+        const y = 12 + Math.random() * maxY;
+
+        zenTarget.style.left = x + "px";
+        zenTarget.style.top = y + "px";
+      }
+
+      function updateZenUI() {
+        zenTime.textContent = zenTimeLeft + "s";
+        zenScore.textContent = String(zenScoreValue);
+        zenHigh.textContent = String(zenHighScore);
+      }
+
+      function startTimer() {
+        if (timerRunning) {
+          return;
+        }
+
+        timerRunning = true;
+        updateTimerUI();
+        timerId = window.setInterval(function () {
+          if (timeLeft > 0) {
+            timeLeft -= 1;
+            updateTimerUI();
+          }
+
+          if (timeLeft === 0) {
+            completeSession();
+          }
+        }, 1000);
+      }
+
+      function pauseTimer() {
+        timerRunning = false;
+        if (timerId) {
+          window.clearInterval(timerId);
+          timerId = null;
+        }
+        updateTimerUI();
+      }
+
+      function completeSession() {
+        const nextMode = timerMode === "focus" ? "break" : "focus";
+        pauseTimer();
+        timerMode = nextMode;
+        timeLeft = SESSION_LENGTHS[nextMode];
+        flashTimerPanel();
+        timerNotice = nextMode === "break"
+          ? "Focus block complete. Step away for five."
+          : "Break complete. Ease back into the next block.";
+        clearTimerNoticeLater();
+        timerNoticeTimeout = window.setTimeout(function () {
+          timerNotice = "";
+          updateTimerUI();
+        }, 3400);
+        updateTimerUI();
+        startTimer();
+      }
+
+      function clearTimerNoticeLater() {
+        if (timerNoticeTimeout) {
+          window.clearTimeout(timerNoticeTimeout);
+          timerNoticeTimeout = null;
+        }
+      }
+
+      function flashTimerPanel() {
+        timerPanel.classList.remove("panel-flash");
+        void timerPanel.offsetWidth;
+        timerPanel.classList.add("panel-flash");
+      }
+    })();
+  </script>
+</body>
+</html>
